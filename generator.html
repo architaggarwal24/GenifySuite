@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GENIFYSUITE</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="shortcut icon" type = "x-icon" href="logo.png">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <script src="https://unpkg.com/unlazy@0.11.3/dist/unlazy.with-hashing.iife.js" defer init></script>
+    <script type="text/javascript">
+        window.tailwind.config = {
+            darkMode: ['class'],
+            theme: {
+                extend: {
+                    colors: {
+                        border: 'hsl(var(--border))',
+                        input: 'hsl(var(--input))',
+                        ring: 'hsl(var(--ring))',
+                        background: 'hsl(var(--background))',
+                        foreground: 'hsl(var(--foreground))',
+                        primary: {
+                            DEFAULT: 'hsl(var(--primary))',
+                            foreground: 'hsl(var(--primary-foreground))'
+                        },
+                        secondary: {
+                            DEFAULT: 'hsl(var(--secondary))',
+                            foreground: 'hsl(var(--secondary-foreground))'
+                        },
+                        destructive: {
+                            DEFAULT: 'hsl(var(--destructive))',
+                            foreground: 'hsl(var(--destructive-foreground))'
+                        },
+                        muted: {
+                            DEFAULT: 'hsl(var(--muted))',
+                            foreground: 'hsl(var(--muted-foreground))'
+                        },
+                        accent: {
+                            DEFAULT: 'hsl(var(--accent))',
+                            foreground: 'hsl(var(--accent-foreground))'
+                        },
+                        popover: {
+                            DEFAULT: 'hsl(var(--popover))',
+                            foreground: 'hsl(var(--popover-foreground))'
+                        },
+                        card: {
+                            DEFAULT: 'hsl(var(--card))',
+                            foreground: 'hsl(var(--card-foreground))'
+                        },
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer base {
+            :root {
+                --background: 0 0% 100%;
+                --foreground: 240 10% 3.9%;
+                --card: 0 0% 100%;
+                --card-foreground: 240 10% 3.9%;
+                --popover: 0 0% 100%;
+                --popover-foreground: 240 10% 3.9%;
+                --primary: 240 5.9% 10%;
+                --primary-foreground: 0 0% 98%;
+                --secondary: 240 4.8% 95.9%;
+                --secondary-foreground: 240 5.9% 10%;
+                --muted: 240 4.8% 95.9%;
+                --muted-foreground: 240 3.8% 46.1%;
+                --accent: 240 4.8% 95.9%;
+                --accent-foreground: 240 5.9% 10%;
+                --destructive: 0 84.2% 60.2%;
+                --destructive-foreground: 0 0% 98%;
+                --border: 240 5.9% 90%;
+                --input: 240 5.9% 90%;
+                --ring: 240 5.9% 10%;
+                --radius: 0.5rem;
+            }
+            .dark {
+                --background: 240 10% 3.9%;
+                --foreground: 0 0% 98%;
+                --card: 240 10% 3.9%;
+                --card-foreground: 0 0% 98%;
+                --popover: 240 10% 3.9%;
+                --popover-foreground: 0 0% 98%;
+                --primary: 0 0% 98%;
+                --primary-foreground: 240 5.9% 10%;
+                --secondary: 240 3.7% 15.9%;
+                --secondary-foreground: 0 0% 98%;
+                --muted: 240 3.7% 15.9%;
+                --muted-foreground: 240 5% 64.9%;
+                --accent: 240 3.7% 15.9%;
+                --accent-foreground: 0 0% 98%;
+                --destructive: 0 62.8% 30.6%;
+                --destructive-foreground: 0 0% 98%;
+                --border: 240 3.7% 15.9%;
+                --input: 240 3.7% 15.9%;
+                --ring: 240 4.9% 83.9%;
+            }
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            margin: 20px auto;
+            background-color: #1b2b3f;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #ffffff;
+        }
+
+        form {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        label, select, input {
+            margin: 10px;
+        }
+        input{
+            background-color: white;
+            color:  #2a3e55;
+            border: none;
+            padding: 10px;
+            width:130px;
+            border-radius: 5px;
+            border :solid;
+            outline: none;
+        }
+        select, input {
+            background-color: white;
+            color:  #2a3e55;
+            border: none;
+            padding: 10px;
+            width:130px;
+            border-radius: 5px;
+            border :solid;
+            border-width:thin;
+            outline: none;
+        }
+
+        .generate-btn {
+            background-color: #59c7a8;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+
+        .generate-btn:hover {
+            background-color: #44b092;
+        }
+
+        .cards {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+
+        .card {
+            border-radius: 15px;
+            width: 350px;
+            height: 180px;
+            padding: 20px;
+            margin: 10px;
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.5);
+            position: relative;
+            font-size: 14px;
+            color: white;
+            background-image: linear-gradient(45deg, #00c6ff, #0072ff);
+        }
+
+        .card.visa {
+            background-image: linear-gradient(45deg, #00C6A5, #0072FF);
+        }
+
+        .card.mastercard {
+            background-image: linear-gradient(45deg, #FF5733, #FFCC33);
+        }
+
+        .card.maestro {
+            background-image: linear-gradient(45deg, #FF3B3B, #4C8BF5);
+        }
+
+        .card.amex {
+            background-color: #00BFFF;
+        }
+
+        .card.dinersclub {
+            background-image: linear-gradient(45deg, #C0C0C0, #E0E0E0);
+        }
+
+        .card.rupay {
+            background-image: linear-gradient(45deg, #5A00FF, #AF00FF);
+        }
+
+        .card h3 {
+            color: #fff;
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .card .card-number {
+            margin: 10px 0;
+            font-size: 18px;
+            letter-spacing: 2px;
+            color: #fff;
+        }
+
+        .card .expiry, .card .cvv {
+            font-size: 14px;
+            color: #eaeaea;
+        }
+
+        .card img {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 50px;
+            height: auto;
+        }
+        .dropbtn {
+            display: inline-block;
+            padding: 10px 20px;
+            margin-top: 20px;
+            font-size: 1rem;
+            color: white;
+            background-color: #16a085;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .dropbtn:hover {
+            background-color: #12876d;
+            transform: scale(1.05);
+        }
+
+        .dropbtn:active {
+            transform: scale(0.95);
+        }
+    </style>
+     <script>
+        $(function(){
+            $('#header').load("header.html");
+        });
+    </script>
+</head>
+<body>
+
+    <header class ="header">
+        <nav>
+            <div class="logo">
+                <img src="logo.png" alt="Logo">
+                <h1>GENIFYSUITE</h1>
+            </div>
+            <ul class="nav-links">
+                <li class="dropdown">
+                    <button class="dropbtn"><a href="index.html">Home</a></button>
+                </li>
+                <li class="dropdown">
+                    <button class="dropbtn"><a href="validator.html">Validator</a></button>
+                </li>
+                <li class="dropdown">
+                    <button class="dropbtn"><a href="generator.html">Generator</a></button>
+                </li>
+                <li class="dropdown">
+                    <button class="dropbtn"><a href="#">Tools</a></button>
+                    <div class="dropdown-content">
+                        <a href="lorem_ipsum-generator.html">Lorem Ipsum Generator</a>
+                        <a href="profile-gen.html">Profile Generator</a>
+                        <a href="ip-finder.html">IP Address Finder</a>
+                    </div>
+                </li>
+                <li class="dropdown">
+                    <button class="dropbtn"><a href="about.html">About Us</a></button>
+                </li>
+            </ul>
+        </nav>
+    </header> 
+
+    <main >
+        <div
+       
+         class="flex flex-col w-[1000px] p-6 items-center rounded-lg  justify-center  bg-background text-foreground "
+        >
+            <h1 class="text-2xl text-black font-bold mb-4">Random Credit Card Generator</h1>
+            <p >Generate random test credit card numbers for testing, development, validation and/or verification purposes.</p>
+        
+            <div class="flex justify-center gap-4 mb-4">
+                <a href="">
+                    <button class="bg-green-500 text-white hover:bg-green-600 px-4 py-2 rounded">Basic</button>
+                </a>
+                <a href="advance.html">
+                    <button class="bg-green-500 text-white hover:bg-green-600 px-4 py-2 rounded">Advance</button>
+                </a>
+            </div>
+            
+            
+            <form id="generator-form">
+               
+                <label for="network">Network</label>
+                <select id="network">
+                    <option value="random">Random</option>
+                    <option value="visa">Visa</option>
+                    <option value="mastercard">MasterCard</option>
+                    <option value="rupay">Rupay</option>
+                    <option value="dinersclub">Diners Club</option>
+                    <option value="amex">American Express</option>
+                    <option value="maestro">Maestro</option>
+                </select>
+        
+                <label for="exp-month">Expiration Month</label>
+                <select id="exp-month">
+                    <option value="random">Random</option>
+                    <option value="01">01</option>
+                    <option value="02">02</option>
+                    <option value="03">03</option>
+                    <option value="04">04</option>
+                    <option value="05">05</option>
+                    <option value="06">06</option>
+                    <option value="07">07</option>
+                    <option value="08">08</option>
+                    <option value="09">09</option>
+                    <option value="10">10</option>
+                    <option value="11">11</option>
+                    <option value="12">12</option>
+                </select>
+        
+                <label for="exp-year">Expiration Year</label>
+                <select id="exp-year">
+                    <option value="random">Random</option>
+                    <option value="2024">2024</option>
+                    <option value="2025">2025</option>
+                    <option value="2026">2026</option>
+                    <option value="2027">2027</option>
+                    <option value="2028">2028</option>
+                    <option value="2029">2029</option>
+                    <option value="2030">2030</option>
+                </select>
+        
+            </form>
+            <div class="flex flex-row">
+            <label for="quantity">Quantity</label>
+            <input class="text-black p-0 w-40 text-center border border-solid border-2 rounded-md " type="number" id="quantity" min="1" max="10" value="10">
+        </div >
+                <button class="mt-4 bg-green-500 text-white hover:bg-green-600 p-2 rounded-md" onclick="generateCards()">Generate</button>
+            </form>
+            <div class="cards" id="cards-container">
+                <!-- Cards will be inserted here -->
+            </div>
+        </div>
+    </main>
+
+
+
+    
+<script>
+// Sample names list
+const names = ["John Smith", "Jane Doe", "Alice Johnson", "Robert Brown", "Emily Davis", "Michael Wilson", "Emma Clark", "James Miller", "Olivia Martin", "Sophia Thompson"];
+
+
+function generateCardNumber(network) {
+    let prefix = '';
+    let cardLength = 16; // Default card length
+
+    // Determine the prefix based on the network
+    switch (network) {
+        case 'Visa':
+            prefix = '4'; // Visa cards start with 4
+            break;
+        case 'MasterCard':
+            prefix = '5'; // MasterCard starts with 5
+            break;
+        case 'American Express':
+            prefix = '34'; // American Express starts with 34
+            cardLength = 15; // American Express cards have 15 digits
+            break;
+        default:
+            // Random network, choose either Visa, MasterCard, or Amex randomly
+            const randomNetwork = Math.floor(Math.random() * 3);
+            if (randomNetwork === 0) {
+                prefix = '4'; // Visa
+            } else if (randomNetwork === 1) {
+                prefix = '5'; // MasterCard
+            } else {
+                prefix = '34'; // American Express
+                cardLength = 15;
+            }
+            break;
+    }
+
+    // Create the base for the card number (excluding the last digit, which is for Luhn's checksum)
+    let cardNumber = prefix;
+    while (cardNumber.length < cardLength - 1) {
+        cardNumber += Math.floor(Math.random() * 10);
+    }
+
+    // Calculate the Luhn checksum digit
+    let sum = 0;
+    let shouldDouble = true;
+
+    for (let i = cardNumber.length - 1; i >= 0; i--) {
+        let digit = parseInt(cardNumber[i]);
+
+        if (shouldDouble) {
+            digit *= 2;
+            if (digit > 9) {
+                digit -= 9;
+            }
+        }
+
+        sum += digit;
+        shouldDouble = !shouldDouble; // Alternate between doubling and not
+    }
+
+    // Determine the final checksum digit
+    let checksumDigit = (sum * 9) % 10;
+    cardNumber += checksumDigit;
+
+    // Format the card number in groups of 4 digits for readability
+    return cardNumber.match(/.{1,4}/g).join(' ');
+}
+
+
+// Function to get card network logo
+function getNetworkLogo(network) {
+    switch (network) {
+        case 'visa':
+            return 'visa.png';
+        case 'mastercard':
+            return 'mastercard.png';
+        case 'rupay':
+            return 'rupay.png';
+        case 'dinersclub':
+            return 'dinersclub.png';
+        case 'amex':
+            return 'amex.png';
+        case 'maestro':
+            return 'maestro.png';
+        default:
+            return 'visa.png'; // Default to Visa if unknown
+    }
+}
+
+
+    document.querySelector("form").addEventListener("submit", function(e) {
+        e.preventDefault(); // Prevent form submission
+
+        let network = document.getElementById("network").value;
+        let cardNumber = generateCardNumber(network);
+
+        // Display the generated card number
+        alert("Generated Card Number: " + cardNumber);
+    });
+
+
+
+// Function to generate cards and display them
+function generateCards() {
+    const cardsContainer = document.getElementById('cards-container');
+    cardsContainer.innerHTML = ''; // Clear previous cards
+
+    const quantity = document.getElementById('quantity').value;
+    const networkSelect = document.getElementById('network').value;
+
+    for (let i = 0; i < quantity; i++) {
+        const cardNumber = generateCardNumber();
+        const expMonth = Math.floor(Math.random() * 12) + 1;
+        const expYear = 2024 + Math.floor(Math.random() * 7);
+        const cvv = Math.floor(100 + Math.random() * 900);
+        const randomName = names[Math.floor(Math.random() * names.length)];
+        const network = networkSelect === 'random' ? ['visa', 'mastercard', 'rupay', 'dinersclub', 'amex', 'maestro'][Math.floor(Math.random() * 6)] : networkSelect;
+
+        // Create card div
+        const card = document.createElement('div');
+        card.classList.add('card', network);
+
+        // Set card content
+        card.innerHTML = `
+            <h3>${randomName}</h3>
+            <div class="card-number">${cardNumber}</div>
+            <div class="expiry">Valid<br> ${expMonth < 10 ? '0' + expMonth : expMonth}/${expYear}</div>
+            <div class="cvv">CVV ${cvv}</div>
+            <img src="${getNetworkLogo(network)}" alt="${network} logo">
+        `;
+
+        // Append to container
+        cardsContainer.appendChild(card);
+    }
+}
+
+</script>
+
+<footer>
+    <p>&copy; <span id="current-year"></span> All rights reserved.</p>
+</footer>
+
+
+</body>
+</html>

@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Address Generator - Coming Soon</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+		<script src="https://unpkg.com/unlazy@0.11.3/dist/unlazy.with-hashing.iife.js" defer init></script>
+		<script type="text/javascript">
+			window.tailwind.config = {
+				darkMode: ['class'],
+				theme: {
+					extend: {
+						colors: {
+							border: 'hsl(var(--border))',
+							input: 'hsl(var(--input))',
+							ring: 'hsl(var(--ring))',
+							background: 'hsl(var(--background))',
+							foreground: 'hsl(var(--foreground))',
+							primary: {
+								DEFAULT: 'hsl(var(--primary))',
+								foreground: 'hsl(var(--primary-foreground))'
+							},
+							secondary: {
+								DEFAULT: 'hsl(var(--secondary))',
+								foreground: 'hsl(var(--secondary-foreground))'
+							},
+							destructive: {
+								DEFAULT: 'hsl(var(--destructive))',
+								foreground: 'hsl(var(--destructive-foreground))'
+							},
+							muted: {
+								DEFAULT: 'hsl(var(--muted))',
+								foreground: 'hsl(var(--muted-foreground))'
+							},
+							accent: {
+								DEFAULT: 'hsl(var(--accent))',
+								foreground: 'hsl(var(--accent-foreground))'
+							},
+							popover: {
+								DEFAULT: 'hsl(var(--popover))',
+								foreground: 'hsl(var(--popover-foreground))'
+							},
+							card: {
+								DEFAULT: 'hsl(var(--card))',
+								foreground: 'hsl(var(--card-foreground))'
+							},
+						},
+					}
+				}
+			}
+		</script>
+		<style type="text/tailwindcss">
+			@layer base {
+				:root {
+					--background: 0 0% 100%;
+--foreground: 240 10% 3.9%;
+--card: 0 0% 100%;
+--card-foreground: 240 10% 3.9%;
+--popover: 0 0% 100%;
+--popover-foreground: 240 10% 3.9%;
+--primary: 142.1 76.2% 36.3%;
+--primary-foreground: 355.7 100% 97.3%;
+--secondary: 240 4.8% 95.9%;
+--secondary-foreground: 240 5.9% 10%;
+--muted: 240 4.8% 95.9%;
+--muted-foreground: 240 3.8% 46.1%;
+--accent: 240 4.8% 95.9%;
+--accent-foreground: 240 5.9% 10%;
+--destructive: 0 84.2% 60.2%;
+--destructive-foreground: 0 0% 98%;
+--border: 240 5.9% 90%;
+--input: 240 5.9% 90%;
+--ring: 142.1 76.2% 36.3%;
+				}
+				.dark {
+					--background: 20 14.3% 4.1%;
+--foreground: 0 0% 95%;
+--popover: 0 0% 9%;
+--popover-foreground: 0 0% 95%;
+--card: 24 9.8% 10%;
+--card-foreground: 0 0% 95%;
+--primary: 142.1 70.6% 45.3%;
+--primary-foreground: 144.9 80.4% 10%;
+--secondary: 240 3.7% 15.9%;
+--secondary-foreground: 0 0% 98%;
+--muted: 0 0% 15%;
+--muted-foreground: 240 5% 64.9%;
+--accent: 12 6.5% 15.1%;
+--accent-foreground: 0 0% 98%;
+--destructive: 0 62.8% 30.6%;
+--destructive-foreground: 0 85.7% 97.3%;
+--border: 240 3.7% 15.9%;
+--input: 240 3.7% 15.9%;
+--ring: 142.4 71.8% 29.2%;
+				}
+			}
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background-color: #567799;
+}
+
+.container {
+    margin: 50px auto;
+    padding: 20px;
+    background: white;
+    width: 60%;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    color: #ffffff;
+}
+
+p {
+    color: #ffffff;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    margin-right: 10px;
+    font-weight: bold;
+}
+
+input[type="number"],
+select {
+    padding: 5px;
+    margin: 0 10px 20px;
+    font-size: 16px;
+}
+
+button {
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+.output {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+textarea {
+    width: 80%;
+    height: 150px;
+    margin-bottom: 10px;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    resize: none;
+}
+
+.copy-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.copy-btn {
+    background-color: #f4f4f4;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.copy-btn:hover {
+    background-color: #eaeaea;
+}
+
+.copy-icon {
+    width: 24px;
+    height: 24px;
+}
+.dropbtn {
+            display: inline-block;
+            padding: 10px 20px;
+            margin-top: 20px;
+            font-size: 1rem;
+            color: white;
+            background-color: #16a085;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .dropbtn:hover {
+            background-color: #12876d;
+            transform: scale(1.05);
+        }
+
+        .dropbtn:active {
+            transform: scale(0.95);
+        }
+		</style>
+</head>
+
+<body>
+    <!-- Include header -->
+    <header class ="header">
+        <nav>
+            <div class="logo">
+                <img src="logo.png" alt="Logo">
+                <h1>GENIFYSUITE</h1>
+            </div>
+            <ul class="nav-links">
+                <li class="dropdown">
+                    <button class="dropbtn"><a href="index.html">Home</a></button>
+                </li>
+                <li class="dropdown">
+                    <button class="dropbtn"><a href="validator.html">Validator</a></button>
+                </li>
+                <li class="dropdown">
+                    <button class="dropbtn"><a href="generator.html">Generator</a></button>
+                </li>
+                <li class="dropdown">
+                    <button class="dropbtn"><a href="#">Tools</a></button>
+                    <div class="dropdown-content">
+                        <a href="lorem_ipsum-generator.html">Lorem Ipsum Generator</a>
+                        <a href="profile-gen.html">Profile Generator</a>
+                        <a href="ip-finder.html">IP Address Finder</a>
+                    </div>
+                </li>
+                <li class="dropdown">
+                    <button class="dropbtn"><a href="about.html">About Us</a></button>
+                </li>
+            </ul>
+        </nav>
+    </header> 
+
+    <main>
+        <div class="bg-card dark:bg-card-foreground p-8 rounded-lg shadow-lg dark:shadow-none">
+            <h1 class="text-3xl font-bold text-foreground dark:text-primary-foreground mb-6">Lorem Ipsum Generator</h1>
+            <p class="text-muted-foreground dark:text-muted-foreground mb-6">
+              Generate placeholder text effortlessly with NamsoGen's Lorem Ipsum Generator. Customizable and easy-to-use, it's the perfect tool for designers and developers.
+            </p>
+            <div class="flex mb-6 space-x-4">
+              <div class="flex-1">
+                <label for="paragraphs" class="block text-black text-muted-foreground dark:text-muted-foreground">Paragraphs</label>
+                <input type="number" id="paragraphs" class="border text-black border-border dark:border-border rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-primary dark:focus:ring-secondary" value="1" min="1" max="100" />
+              </div>
+              <div class="flex-1">
+                <label for="length" class="block text-black text-muted-foreground dark:text-muted-foreground">Length</label>
+                <select id="length" class="text-black border border-border dark:border-border rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-primary dark:focus:ring-secondary">
+                  <option value="short">Short</option>
+                  <option value="medium">Medium</option>
+                  <option value="long">Long</option>
+                </select>
+              </div>
+            </div>
+            <button id="generate" class=" bg-primary text-primary-foreground dark:bg-secondary dark:text-secondary-foreground hover:bg-primary/80 dark:hover:bg-secondary/80 p-3 rounded-lg transition-colors duration-200">Generate</button>
+            <p class="text-muted-foreground dark:text-muted-foreground mt-4">
+              Click on the paragraph you want to copy or to copy all, click 
+              <button id="copy-btn" class="w-10 bg-gray-200 text-accent-foreground dark:bg-accent dark:text-accent-foreground hover:bg-accent/80 dark:hover:bg-accent/80 p-2 rounded-lg">📋</button>
+            </p>
+                <textarea id="generated-text" class="text-black mt-6 p-4 ml-[100px] bg- border border-xl border-border dark:border-border rounded-lg dark:bg-card output" placeholder="Your text is generated here." readonly></textarea>
+          
+          </div>
+           
+        </div>
+
+    </main>
+
+    <!-- Include footer -->
+    <footer>
+        <p>&copy; <span id="current-year"></span> All rights reserved.</p>
+    </footer>
+
+
+    <script>
+      const loremIpsumText = {
+    short: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+    medium: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+    long: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+};
+
+document.getElementById('generate').addEventListener('click', () => {
+    const paragraphs = parseInt(document.getElementById('paragraphs').value);
+    const length = document.getElementById('length').value;
+    let generatedText = '';
+
+    for (let i = 0; i < paragraphs; i++) {
+        generatedText += loremIpsumText[length] + '\n\n';
+    }
+
+    document.getElementById('generated-text').value = generatedText.trim();
+});
+
+document.getElementById('copy-btn').addEventListener('click', () => {
+    const textArea = document.getElementById('generated-text');
+    textArea.select();
+    document.execCommand('copy');
+    alert('Text copied to clipboard!');
+});
+
+    </script>
+</body>
+</html>

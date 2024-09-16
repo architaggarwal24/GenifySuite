@@ -1,0 +1,238 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us - GENIFYSUITE</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <script src="https://unpkg.com/unlazy@0.11.3/dist/unlazy.with-hashing.iife.js" defer init></script>
+    <script type="text/javascript">
+        window.tailwind.config = {
+            darkMode: ['class'],
+            theme: {
+                extend: {
+                    colors: {
+                        border: 'hsl(var(--border))',
+                        input: 'hsl(var(--input))',
+                        ring: 'hsl(var(--ring))',
+                        background: 'hsl(var(--background))',
+                        foreground: 'hsl(var(--foreground))',
+                        primary: {
+                            DEFAULT: 'hsl(var(--primary))',
+                            foreground: 'hsl(var(--primary-foreground))'
+                        },
+                        secondary: {
+                            DEFAULT: 'hsl(var(--secondary))',
+                            foreground: 'hsl(var(--secondary-foreground))'
+                        },
+                        destructive: {
+                            DEFAULT: 'hsl(var(--destructive))',
+                            foreground: 'hsl(var(--destructive-foreground))'
+                        },
+                        muted: {
+                            DEFAULT: 'hsl(var(--muted))',
+                            foreground: 'hsl(var(--muted-foreground))'
+                        },
+                        accent: {
+                            DEFAULT: 'hsl(var(--accent))',
+                            foreground: 'hsl(var(--accent-foreground))'
+                        },
+                        popover: {
+                            DEFAULT: 'hsl(var(--popover))',
+                            foreground: 'hsl(var(--popover-foreground))'
+                        },
+                        card: {
+                            DEFAULT: 'hsl(var(--card))',
+                            foreground: 'hsl(var(--card-foreground))'
+                        },
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer base {
+            :root {
+                --background: 0 0% 100%;
+                --foreground: 240 10% 3.9%;
+                --card: 0 0% 100%;
+                --card-foreground: 240 10% 3.9%;
+                --popover: 0 0% 100%;
+                --popover-foreground: 240 10% 3.9%;
+                --primary: 240 5.9% 10%;
+                --primary-foreground: 0 0% 98%;
+                --secondary: 240 4.8% 95.9%;
+                --secondary-foreground: 240 5.9% 10%;
+                --muted: 240 4.8% 95.9%;
+                --muted-foreground: 240 3.8% 46.1%;
+                --accent: 240 4.8% 95.9%;
+                --accent-foreground: 240 5.9% 10%;
+                --destructive: 0 84.2% 60.2%;
+                --destructive-foreground: 0 0% 98%;
+                --border: 240 5.9% 90%;
+                --input: 240 5.9% 90%;
+                --ring: 240 5.9% 10%;
+                --radius: 0.5rem;
+            }
+            .dark {
+                --background: 240 10% 3.9%;
+                --foreground: 0 0% 98%;
+                --card: 240 10% 3.9%;
+                --card-foreground: 0 0% 98%;
+                --popover: 240 10% 3.9%;
+                --popover-foreground: 0 0% 98%;
+                --primary: 0 0% 98%;
+                --primary-foreground: 240 5.9% 10%;
+                --secondary: 240 3.7% 15.9%;
+                --secondary-foreground: 0 0% 98%;
+                --muted: 240 3.7% 15.9%;
+                --muted-foreground: 240 5% 64.9%;
+                --accent: 240 3.7% 15.9%;
+                --accent-foreground: 0 0% 98%;
+                --destructive: 0 62.8% 30.6%;
+                --destructive-foreground: 0 0% 98%;
+                --border: 240 3.7% 15.9%;
+                --input: 240 3.7% 15.9%;
+                --ring: 240 4.9% 83.9%;
+            }
+        }
+
+        /* About Us Section CSS */
+        .about-section {
+            background-color: #f9f9f9;
+            padding: 50px;
+            border-radius: 10px;
+            margin-top: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .about-section h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color:  #16a085;
+            text-align: center;
+        }
+
+        .about-section h2 {
+            font-size: 1.8rem;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            color:  #16a085;
+        }
+
+        .about-section p {
+            font-size: 1rem;
+            color: #333;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .about-section ul {
+            list-style: disc;
+            padding-left: 20px;
+        }
+
+        .about-section ul li {
+            margin-bottom: 10px;
+        }
+
+        .about-section ul li strong {
+            color:  #16a085;
+        }
+
+        /* Hoverable button */
+        .dropbtn {
+            display: inline-block;
+            padding: 10px 20px;
+            margin-top: 20px;
+            font-size: 1rem;
+            color: white;
+            background-color: #16a085;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .dropbtn:hover {
+            background-color: #12876d;
+            transform: scale(1.05);
+        }
+
+        .dropbtn:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+    <!-- Include header -->
+    <header class="header">
+        <nav>
+            <div class="logo">
+                <img src="logo.png" alt="Logo">
+                <h1 class="text-white">GENIFYSUITE</h1>
+            </div>
+            <ul class="nav-links">
+                <li class="dropdown">
+                    <button class="dropbtn"><a href="index.html">Home</a></button>
+                </li>
+                <li class="dropdown">
+                    <button class="dropbtn"><a href="validator.html">Validator</a></button>
+                </li>
+                <li class="dropdown">
+                    <button class="dropbtn"><a href="generator.html">Generator</a></button>
+                </li>
+                <li class="dropdown">
+                    <button class="dropbtn"><a href="#">Tools</a></button>
+                    <div class="dropdown-content">
+                        <a href="lorem_ipsum-generator.html">Lorem Ipsum Generator</a>
+                        <a href="profile-gen.html">Profile Generator</a>
+                        <a href="ip-finder.html">IP Address Finder</a>
+                    </div>
+                </li>
+                <li class="dropdown">
+                    <button class="dropbtn"><a href="about.html">About Us</a></button>
+                </li>
+            </ul>
+        </nav>
+    </header> 
+
+    <main>
+        <div class="about-section">
+            <h1><strong>Welcome to GENIFYSUITE</strong></h1>
+            <p><strong>GENIFYSUITE</strong> is a one-stop solution for developers and users looking for a variety of tools to enhance productivity. Our suite offers reliable tools ranging from credit card validators to lorem ipsum generators, ensuring that every functionality is tailored to make your tasks easier.</p>
+
+            <h2>Credit Card Validator</h2>
+            <p>Our <strong>Credit Card Validator</strong> uses the well-known Luhn algorithm to check whether a credit card number is valid. This is useful for developers who want to ensure that the card details provided by users conform to industry standards.</p>
+            <a href="validator.html" class="dropbtn">Check it Out</a>
+
+            <h2>Credit Card Generator</h2>
+            <p>The <strong>Credit Card Generator</strong> creates dummy card numbers for testing purposes. Developers can use this tool to generate card numbers with different issuers like Visa, Mastercard, and more. Please note that these numbers are not tied to real financial accounts and are for testing only.</p>
+            <a href="generator.html" class="dropbtn">Check it Out</a>
+           
+            
+
+            <h2>Lorem Ipsum Generator</h2>
+            <p>The <strong>Lorem Ipsum Generator</strong> allows you to quickly generate placeholder text for your web projects or design mockups. You can generate paragraphs, sentences, or words in a matter of seconds, making it easy to focus on your layout before final content is available.</p>
+            <a href="lorem_ipsum-generator.html" class="dropbtn">Check it Out</a>
+            <h2>IP Address Location Finder</h2>
+            <p>The <strong>IP Address Location Finder</strong> helps identify the geographical location associated with a given IP address. This tool is valuable for developers who need to track or analyze web traffic based on IP addresses or for users who want to check their own IP information.</p>
+            <a href="ip-finder.html" class="dropbtn">Check it Out</a>
+            <h2>Profile Generator</h2>
+            <p>With our <strong>Profile Generator</strong>, you can create randomized user profiles complete with names, addresses, emails, and more. This is particularly useful for testing applications, where mock data is essential for testing various scenarios without exposing real user information.</p>
+            <a href="profile-gen.html" class="dropbtn">Check it Out</a>
+        </div>
+    </main>
+
+    <!-- Include footer -->
+    <footer>
+        <p>&copy; <span id="current-year"></span> All rights reserved.</p>
+    </footer>
+
+</body>
+</html>
+

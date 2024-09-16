@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GENIFYSUITE</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="shortcut icon" type = "x-icon" href="logo.png">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+		<script src="https://unpkg.com/unlazy@0.11.3/dist/unlazy.with-hashing.iife.js" defer init></script>
+		<script type="text/javascript">
+			window.tailwind.config = {
+				darkMode: ['class'],
+				theme: {
+					extend: {
+						colors: {
+							border: 'hsl(var(--border))',
+							input: 'hsl(var(--input))',
+							ring: 'hsl(var(--ring))',
+							background: 'hsl(var(--background))',
+							foreground: 'hsl(var(--foreground))',
+							primary: {
+								DEFAULT: 'hsl(var(--primary))',
+								foreground: 'hsl(var(--primary-foreground))'
+							},
+							secondary: {
+								DEFAULT: 'hsl(var(--secondary))',
+								foreground: 'hsl(var(--secondary-foreground))'
+							},
+							destructive: {
+								DEFAULT: 'hsl(var(--destructive))',
+								foreground: 'hsl(var(--destructive-foreground))'
+							},
+							muted: {
+								DEFAULT: 'hsl(var(--muted))',
+								foreground: 'hsl(var(--muted-foreground))'
+							},
+							accent: {
+								DEFAULT: 'hsl(var(--accent))',
+								foreground: 'hsl(var(--accent-foreground))'
+							},
+							popover: {
+								DEFAULT: 'hsl(var(--popover))',
+								foreground: 'hsl(var(--popover-foreground))'
+							},
+							card: {
+								DEFAULT: 'hsl(var(--card))',
+								foreground: 'hsl(var(--card-foreground))'
+							},
+						},
+					}
+				}
+			}
+		</script>
+        <style type="text/tailwindcss">
+			@layer base {
+				:root {
+					--background: 0 0% 100%;
+--foreground: 240 10% 3.9%;
+--card: 0 0% 100%;
+--card-foreground: 240 10% 3.9%;
+--popover: 0 0% 100%;
+--popover-foreground: 240 10% 3.9%;
+--primary: 240 5.9% 10%;
+--primary-foreground: 0 0% 98%;
+--secondary: 240 4.8% 95.9%;
+--secondary-foreground: 240 5.9% 10%;
+--muted: 240 4.8% 95.9%;
+--muted-foreground: 240 3.8% 46.1%;
+--accent: 240 4.8% 95.9%;
+--accent-foreground: 240 5.9% 10%;
+--destructive: 0 84.2% 60.2%;
+--destructive-foreground: 0 0% 98%;
+--border: 240 5.9% 90%;
+--input: 240 5.9% 90%;
+--ring: 240 5.9% 10%;
+--radius: 0.5rem;
+				}
+				.dark {
+					--background: 240 10% 3.9%;
+--foreground: 0 0% 98%;
+--card: 240 10% 3.9%;
+--card-foreground: 0 0% 98%;
+--popover: 240 10% 3.9%;
+--popover-foreground: 0 0% 98%;
+--primary: 0 0% 98%;
+--primary-foreground: 240 5.9% 10%;
+--secondary: 240 3.7% 15.9%;
+--secondary-foreground: 0 0% 98%;
+--muted: 240 3.7% 15.9%;
+--muted-foreground: 240 5% 64.9%;
+--accent: 240 3.7% 15.9%;
+--accent-foreground: 0 0% 98%;
+--destructive: 0 62.8% 30.6%;
+--destructive-foreground: 0 0% 98%;
+--border: 240 3.7% 15.9%;
+--input: 240 3.7% 15.9%;
+--ring: 240 4.9% 83.9%;
+				}
+			}
+            .about-us-section {
+            max-width: 1200px;
+            margin: 1rem auto;
+            padding: 2rem;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .about-us-section h2 {
+            font-size: 2.5rem;
+            color: #16a085;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .about-us-section p{
+            text-align:left;
+        }
+        .about-us-section p, 
+        .about-us-section ul {
+            color: #555;
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .about-us-section h3 {
+            font-size: 1.8rem;
+            color: #16a085;
+            margin-bottom: 1rem;
+        }
+
+        .about-us-section ul {
+            list-style: none;
+            text-align:left;
+        }
+
+        .about-us-section ul li {
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .about-us-section ul li::before {
+            content: "\f00c";
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            color: #16a085;
+            margin-right: 10px;
+        }
+
+        .about-us-section a {
+            color: #16a085;
+            text-decoration: none;
+        }
+
+        .about-us-section a:hover {
+            text-decoration: underline;
+        }
+        @media screen and (max-width: 768px) {
+           
+            .about-us-section {
+                padding: 1.5rem;
+            }
+
+            .about-us-section h2 {
+                font-size: 2rem;
+            }
+
+            .about-us-section h3 {
+                font-size: 1.5rem;
+            }
+        }
+        .dropbtn {
+            display: inline-block;
+            padding: 10px 20px;
+            margin-top: 20px;
+            font-size: 1rem;
+            color: white;
+            background-color: #16a085;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .dropbtn:hover {
+            background-color: #12876d;
+            transform: scale(1.05);
+        }
+
+        .dropbtn:active {
+            transform: scale(0.95);
+        }
+		</style>
+</head>
+<body>
+
+    <header class ="header">
+        <nav>
+            <div class="logo">
+                <img src="logo.png" alt="Logo">
+                <h1 class="text-white">GENIFYSUITE</h1>
+            </div>
+            <ul class="nav-links">
+                <li class="dropdown">
+                    <button class="dropbtn"><a href="index.html">Home</a></button>
+                </li>
+                <li class="dropdown">
+                    <button class="dropbtn"><a href="validator.html">Validator</a></button>
+                </li>
+                <li class="dropdown">
+                    <button class="dropbtn"><a href="generator.html">Generator</a></button>
+                </li>
+                <li class="dropdown">
+                    <button class="dropbtn"><a href="#">Tools</a></button>
+                    <div class="dropdown-content">
+                        <a href="lorem_ipsum-generator.html">Lorem Ipsum Generator</a>
+                        <a href="profile-gen.html">Profile Generator</a>
+                        <a href="ip-finder.html">IP Address Finder</a>
+                    </div>
+                </li>
+                <li class="dropdown">
+                    <button class="dropbtn"><a href="about.html">About Us</a></button>
+                </li>
+            </ul>
+        </nav>
+    </header> 
+    <main>
+        <section class="about-us-section">
+            <h2 ><strong>About Us</strong></h2>
+            <p>
+                Welcome to GenifySuite, your one-stop destination for online utility tools designed to enhance productivity and simplify everyday tasks. At GenifySuite, we believe in delivering intuitive and reliable solutions for users across the globe.
+            </p>
+
+            <h3>Our Mission</h3>
+            <p>
+                Our mission is to make online tools accessible, fast, and secure for everyone. Whether you're a developer, a designer, or just a curious user, our suite of tools provides quick and easy solutions for your various needs. We strive to continuously evolve, innovating our platform to offer new and advanced tools that make life a little easier.
+            </p>
+
+            <h3>Our Vision</h3>
+            <p>
+                We envision a future where individuals and businesses can perform essential tasks online without the complexities that often come with software installations or manual efforts. GenifySuite aims to be a leader in providing free, efficient, and trustworthy online utilities that are available to anyone with an internet connection.
+            </p>
+
+            <h3>Our Values</h3>
+            <ul>
+                <li><strong>Innovation:</strong> We believe in constant innovation, developing tools that address real-world problems with smart solutions.</li>
+                <li><strong>Accessibility:</strong> Our platform is designed to be user-friendly and accessible to people of all skill levels.</li>
+                <li><strong>Security:</strong> We prioritize the safety and privacy of our users by adopting secure practices and protecting user data.</li>
+                <li><strong>Transparency:</strong> We maintain complete transparency about our operations, ensuring that users trust our tools and our company.</li>
+                <li><strong>Customer-Centricity:</strong> Our users come first. We listen to feedback and are committed to continuously improving our services.</li>
+            </ul>
+
+            <h3>Why Choose Us?</h3>
+            <p>
+                GenifySuite stands out by offering a wide array of practical, time-saving online tools. We are driven by the belief that everyone should have access to tools that streamline their digital life. With GenifySuite, you don’t have to search multiple websites for different tools — you can find them all in one place.
+            </p>
+
+            <h3>Commitment to Privacy</h3>
+            <p>
+                Your privacy is of utmost importance to us. GenifySuite follows strict data protection measures, and we do not store any sensitive information. Our tools are built to provide results instantly without compromising user data.
+            </p>
+
+            <h3>Get Involved</h3>
+            <p>
+                We are always open to feedback and suggestions. If you have ideas on how we can improve or if you're facing any challenges using our tools, feel free to contact us. Together, we can continue to make GenifySuite the best online tool platform available.
+            </p>
+
+            <h3>Contact Us</h3>
+            <p>
+                If you would like to learn more about our services or have any inquiries, please don’t hesitate to reach out to us. Visit our <a href="contact.html">Contact Us</a> page or email us directly at <a href="mailto:support@genifysuite.com">support@genifysuite.com</a>.
+            </p>
+        </section>
+    </main>
+
+
+     
+    <footer>
+        <p>&copy; <span id="current-year"></span> All rights reserved.</p>
+    </footer>
+
+    <script src="scripts.js"></script>
+</body>
+</html>

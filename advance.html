@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GENIFYSUITE</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="shortcut icon" type = "x-icon" href="logo.png">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+		<script src="https://unpkg.com/unlazy@0.11.3/dist/unlazy.with-hashing.iife.js" defer init></script>
+		<script type="text/javascript">
+			window.tailwind.config = {
+				darkMode: ['class'],
+				theme: {
+					extend: {
+						colors: {
+							border: 'hsl(var(--border))',
+							input: 'hsl(var(--input))',
+							ring: 'hsl(var(--ring))',
+							background: 'hsl(var(--background))',
+							foreground: 'hsl(var(--foreground))',
+							primary: {
+								DEFAULT: 'hsl(var(--primary))',
+								foreground: 'hsl(var(--primary-foreground))'
+							},
+							secondary: {
+								DEFAULT: 'hsl(var(--secondary))',
+								foreground: 'hsl(var(--secondary-foreground))'
+							},
+							destructive: {
+								DEFAULT: 'hsl(var(--destructive))',
+								foreground: 'hsl(var(--destructive-foreground))'
+							},
+							muted: {
+								DEFAULT: 'hsl(var(--muted))',
+								foreground: 'hsl(var(--muted-foreground))'
+							},
+							accent: {
+								DEFAULT: 'hsl(var(--accent))',
+								foreground: 'hsl(var(--accent-foreground))'
+							},
+							popover: {
+								DEFAULT: 'hsl(var(--popover))',
+								foreground: 'hsl(var(--popover-foreground))'
+							},
+							card: {
+								DEFAULT: 'hsl(var(--card))',
+								foreground: 'hsl(var(--card-foreground))'
+							},
+						},
+					}
+				}
+			}
+		</script>
+		<style type="text/tailwindcss">
+			@layer base {
+				:root {
+					--background: 0 0% 100%;
+--foreground: 240 10% 3.9%;
+--card: 0 0% 100%;
+--card-foreground: 240 10% 3.9%;
+--popover: 0 0% 100%;
+--popover-foreground: 240 10% 3.9%;
+--primary: 142.1 76.2% 36.3%;
+--primary-foreground: 355.7 100% 97.3%;
+--secondary: 240 4.8% 95.9%;
+--secondary-foreground: 240 5.9% 10%;
+--muted: 240 4.8% 95.9%;
+--muted-foreground: 240 3.8% 46.1%;
+--accent: 240 4.8% 95.9%;
+--accent-foreground: 240 5.9% 10%;
+--destructive: 0 84.2% 60.2%;
+--destructive-foreground: 0 0% 98%;
+--border: 240 5.9% 90%;
+--input: 240 5.9% 90%;
+--ring: 142.1 76.2% 36.3%;
+				}
+				.dark {
+					--background: 20 14.3% 4.1%;
+--foreground: 0 0% 95%;
+--popover: 0 0% 9%;
+--popover-foreground: 0 0% 95%;
+--card: 24 9.8% 10%;
+--card-foreground: 0 0% 95%;
+--primary: 142.1 70.6% 45.3%;
+--primary-foreground: 144.9 80.4% 10%;
+--secondary: 240 3.7% 15.9%;
+--secondary-foreground: 0 0% 98%;
+--muted: 0 0% 15%;
+--muted-foreground: 240 5% 64.9%;
+--accent: 12 6.5% 15.1%;
+--accent-foreground: 0 0% 98%;
+--destructive: 0 62.8% 30.6%;
+--destructive-foreground: 0 85.7% 97.3%;
+--border: 240 3.7% 15.9%;
+--input: 240 3.7% 15.9%;
+--ring: 142.4 71.8% 29.2%;
+				}
+			}
+
+.output-window {
+    width: 100%;
+
+}
+.dropbtn {
+            display: inline-block;
+            padding: 10px 20px;
+            margin-top: 20px;
+            font-size: 1rem;
+            color: white;
+            background-color: #16a085;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .dropbtn:hover {
+            background-color: #12876d;
+            transform: scale(1.05);
+        }
+
+        .dropbtn:active {
+            transform: scale(0.95);
+        }
+		</style>
+    <script>
+      // Luhn Algorithm to generate valid credit card numbers
+function generateLuhn(bin) {
+    let cardNumber = bin;
+    while (cardNumber.length < 15) {
+        cardNumber += Math.floor(Math.random() * 10);
+    }
+    let sum = 0;
+    let shouldDouble = false;
+    for (let i = cardNumber.length - 1; i >= 0; i--) {
+        let digit = parseInt(cardNumber[i]);
+        if (shouldDouble) {
+            digit *= 2;
+            if (digit > 9) digit -= 9;
+        }
+        sum += digit;
+        shouldDouble = !shouldDouble;
+    }
+    let checkDigit = (10 - (sum % 10)) % 10;
+    return cardNumber + checkDigit;
+}
+
+// Function to generate cards
+function generateCards() {
+    const bin = document.getElementById("bin").value;
+    const quantity = parseInt(document.getElementById("quantity").value);
+    const format = document.getElementById("format").value;
+    const expirationMonth = document.getElementById("expirationMonth").value;
+    const expirationYear = document.getElementById("expirationYear").value;
+    const cvv = document.getElementById("cvv").value;
+    const balanceRange = document.getElementById("balance").value.split('-');
+    const currency = document.getElementById("currency").value;
+    const minBalance = parseInt(balanceRange[0]);
+    const maxBalance = parseInt(balanceRange[1]);
+
+    let cards = [];
+
+    for (let i = 0; i < quantity; i++) {
+        let cardNumber = generateLuhn(bin);
+        let expMonth = expirationMonth === "Random" ? Math.floor(Math.random() * 12) + 1 : expirationMonth;
+        let expYear = expirationYear === "Random" ? new Date().getFullYear() + Math.floor(Math.random() * 5) : expirationYear;
+        let randomCVV = cvv || Math.floor(Math.random() * 900) + 100;
+        let balance = Math.floor(Math.random() * (maxBalance - minBalance + 1)) + minBalance;
+
+        let cardDetails = `${cardNumber} | ${expMonth}/${expYear} | CVV: ${randomCVV} | ${currency} ${balance}`;
+        if (format === "pipe") {
+            cardDetails = `${cardNumber}|${expMonth}|${expYear}|${randomCVV}|${currency}|${balance}`;
+        }
+        cards.push(cardDetails);
+    }
+
+    document.getElementById("generatedCards").textContent = cards.join("\n");
+}
+
+// Function to copy cards to clipboard
+function copyToClipboard() {
+    const text = document.getElementById("generatedCards").textContent;
+    navigator.clipboard.writeText(text);
+    // alert("Copied to clipboard!");
+}
+
+// Function to reset the form
+function resetForm() {
+    document.getElementById("bin").value = "";
+    document.getElementById("expirationMonth").value = "Random";
+    document.getElementById("expirationYear").value = "Random";
+    document.getElementById("cvv").value = "";
+    document.getElementById("quantity").value = "10";
+    document.getElementById("balance").value = "500-5000";
+    document.getElementById("generatedCards").textContent = "Generated cards will appear here";
+}
+
+    </script>
+</head>
+<body>
+
+    <header class ="header">
+        <nav>
+            <div class="logo">
+                <img src="logo.png" alt="Logo">
+                <h1 class="text-white">GENIFYSUITE</h1>
+            </div>
+            <ul class="nav-links">
+                <li class="dropdown">
+                    <button class="dropbtn"><a href="index.html">Home</a></button>
+                </li>
+                <li class="dropdown">
+                    <button class="dropbtn"><a href="validator.html">Validator</a></button>
+                </li>
+                <li class="dropdown">
+                    <button class="dropbtn"><a href="generator.html">Generator</a></button>
+                </li>
+                <li class="dropdown">
+                    <button class="dropbtn"><a href="#">Tools</a></button>
+                    <div class="dropdown-content">
+                        <a href="lorem_ipsum-generator.html">Lorem Ipsum Generator</a>
+                        <a href="profile-gen.html">Profile Generator</a>
+                        <a href="ip-finder.html">IP Address Finder</a>
+                    </div>
+                </li>
+                <li class="dropdown">
+                    <button class="dropbtn"><a href="about.html">About Us</a></button>
+                </li>
+            </ul>
+        </nav>
+    </header> 
+    <main>
+        <div class="flex flex-col md:flex-row p-4 bg-background rounded-lg">
+            <div class="w-full md:w-1/3 p-4">
+                <div class="flex justify-center gap-4 mb-4">
+                    <a href="generator.html">
+                        <button class="bg-green-500 hover:bg-green-600 px-4 py-2 rounded">Basic</button>
+                    </a>
+                    <a href="advance.html">
+                        <button class="bg-green-500  hover:bg-green-600 px-4 py-2 rounded">Advance</button>
+                    </a>
+                </div>
+              <div class="mb-4">
+                <label class="block text-black" for="bin">BIN</label>
+                <input id="bin" type="text" placeholder="e.g: 453590" class="text-black w-full p-2 border border-border rounded" />
+              </div>
+              <div class="mb-4">
+                <label class="block text-black" for="format">FORMAT</label>
+                <select id="format" class="text-black w-full p-2 border border-border rounded">
+                  <option>PIPE</option>
+                  <option>SQL</option>
+                  <option>CSV</option>
+                  <option>JSON</option>
+                  <option>XML</option>
+                </select>
+              </div>
+              <div class="mb-4" >
+                <label class="block text-black" for="expirationMonth">EXPIRATION MONTH</label>
+                <select id="expirationMonth" class="w-full p-2 border border-border rounded text-black">
+                  <option>Random</option>
+                  <option>01</option>
+                  <option>02</option>
+                  <option>03</option>
+                  <option>04</option>
+                  <option>05</option>
+                  <option>06</option>
+                  <option>07</option>
+                  <option>08</option>
+                  <option>09</option>
+                  <option>10</option>
+                  <option>11</option>
+                  <option>12</option>
+            
+
+                </select>
+              </div>
+              <div class="mb-4">
+                <label class="block text-black" for="expirationYear">EXPIRATION YEAR</label>
+                <select id="expirationYear" class="w-full p-2 border border-border rounded text-black">
+                  <option>Random</option>
+                  <option>2023</option>
+                  <option>2024</option>
+                  <option>2025</option>
+                  <option>2026</option>
+                  <option>2027</option>
+                  <option>2028</option>
+                  <option>2029</option>
+                  <option>2030</option>
+
+                </select>
+              </div>
+              <div class="mb-4">
+                <label class="block text-black" for="cvv">CVV</label>
+                <input id="cvv" type="text" placeholder="Leave blank to randomize" class="w-full p-2 border border-border rounded text-black" />
+              </div>
+              <div class="mb-4">
+                <label class="block text-black" for="quantity">QUANTITY</label>
+                <input id ="quantity" type="number" value="10" class="w-full p-2 border border-border rounded text-black" />
+              </div>
+              <div class="mb-4">
+                <label class="block text-black" for="currency">CURRENCY</label>
+                <select id="currency" class="w-full p-2 border border-border rounded text-black">
+                  <option>United States Dollar</option>
+                  <option>Indian Rupee</option>
+                  <option>Euro</option>
+                  <option>Japanese Yen</option>
+                  <option>Philippine Peso</option>
+                  <option>Swiss Franc</option>
+                  <option>Saudi Riyal</option>
+
+                </select>
+              </div>
+              <div class="mb-4">
+                <label class="block text-black" for="balance">BALANCE</label>
+                <select id="balance" type="text"class="text-black w-full p-2 border border-border rounded" >
+                  <option>0-1000</option>
+                  <option>1000-2000</option>
+                  <option>2000-3000</option>
+                  <option>3000-4000</option>
+                  <option>4000-5000</option>
+
+                  
+                </select>
+              </div>
+              <button class="mt-4 bg-green-500 hover:bg-green-600 p-2 rounded-md" onclick="generateCards()">Generate</button>
+            </div>
+            <div class="w-full md:w-2/3 p-4">
+              <div class="h-[700px] bg-gray-200 text-left p-4 border border-border rounded ml-4 overflow-auto">
+            <div>
+                <p class="text-black " id="generatedCards" >Generated cards will appear here</p>
+              </div> 
+        
+            </div>
+              <div class="flex justify-between mt-4 h-34">
+                <button class="copy-btn bg-green-500 text-white hover:bg-green-600 p-2 rounded-md" onclick="copyToClipboard()" >Copy</button>
+          
+                <button class="reset-btn bg-red-500 text-white hover:bg-red-600 p-2 rounded-md" onclick="resetForm()">Reset</button>
+              </div>
+              
+            </div>
+          </div>
+    </main>  
+
+
+
+
+     
+    <footer>
+        <p>&copy; <span id="current-year"></span> All rights reserved.</p>
+    </footer>
+
+
+    <script src="scripts.js"></script>
+</body>
+</html>

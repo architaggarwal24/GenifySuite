@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GENIFYSUITE</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="shortcut icon" type = "x-icon" href="logo.png">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+		<script src="https://unpkg.com/unlazy@0.11.3/dist/unlazy.with-hashing.iife.js" defer init></script>
+		<script type="text/javascript">
+			window.tailwind.config = {
+				darkMode: ['class'],
+				theme: {
+					extend: {
+						colors: {
+							border: 'hsl(var(--border))',
+							input: 'hsl(var(--input))',
+							ring: 'hsl(var(--ring))',
+							background: 'hsl(var(--background))',
+							foreground: 'hsl(var(--foreground))',
+							primary: {
+								DEFAULT: 'hsl(var(--primary))',
+								foreground: 'hsl(var(--primary-foreground))'
+							},
+							secondary: {
+								DEFAULT: 'hsl(var(--secondary))',
+								foreground: 'hsl(var(--secondary-foreground))'
+							},
+							destructive: {
+								DEFAULT: 'hsl(var(--destructive))',
+								foreground: 'hsl(var(--destructive-foreground))'
+							},
+							muted: {
+								DEFAULT: 'hsl(var(--muted))',
+								foreground: 'hsl(var(--muted-foreground))'
+							},
+							accent: {
+								DEFAULT: 'hsl(var(--accent))',
+								foreground: 'hsl(var(--accent-foreground))'
+							},
+							popover: {
+								DEFAULT: 'hsl(var(--popover))',
+								foreground: 'hsl(var(--popover-foreground))'
+							},
+							card: {
+								DEFAULT: 'hsl(var(--card))',
+								foreground: 'hsl(var(--card-foreground))'
+							},
+						},
+					}
+				}
+			}
+		</script>
+        <style type="text/tailwindcss">
+			@layer base {
+				:root {
+					--background: 0 0% 100%;
+--foreground: 240 10% 3.9%;
+--card: 0 0% 100%;
+--card-foreground: 240 10% 3.9%;
+--popover: 0 0% 100%;
+--popover-foreground: 240 10% 3.9%;
+--primary: 240 5.9% 10%;
+--primary-foreground: 0 0% 98%;
+--secondary: 240 4.8% 95.9%;
+--secondary-foreground: 240 5.9% 10%;
+--muted: 240 4.8% 95.9%;
+--muted-foreground: 240 3.8% 46.1%;
+--accent: 240 4.8% 95.9%;
+--accent-foreground: 240 5.9% 10%;
+--destructive: 0 84.2% 60.2%;
+--destructive-foreground: 0 0% 98%;
+--border: 240 5.9% 90%;
+--input: 240 5.9% 90%;
+--ring: 240 5.9% 10%;
+--radius: 0.5rem;
+				}
+				.dark {
+					--background: 240 10% 3.9%;
+--foreground: 0 0% 98%;
+--card: 240 10% 3.9%;
+--card-foreground: 0 0% 98%;
+--popover: 240 10% 3.9%;
+--popover-foreground: 0 0% 98%;
+--primary: 0 0% 98%;
+--primary-foreground: 240 5.9% 10%;
+--secondary: 240 3.7% 15.9%;
+--secondary-foreground: 0 0% 98%;
+--muted: 240 3.7% 15.9%;
+--muted-foreground: 240 5% 64.9%;
+--accent: 240 3.7% 15.9%;
+--accent-foreground: 0 0% 98%;
+--destructive: 0 62.8% 30.6%;
+--destructive-foreground: 0 0% 98%;
+--border: 240 3.7% 15.9%;
+--input: 240 3.7% 15.9%;
+--ring: 240 4.9% 83.9%;
+				}
+			}
+            .dropbtn {
+            display: inline-block;
+            padding: 10px 20px;
+            margin-top: 20px;
+            font-size: 1rem;
+            color: white;
+            background-color: #16a085;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .dropbtn:hover {
+            background-color: #12876d;
+            transform: scale(1.05);
+        }
+
+        .dropbtn:active {
+            transform: scale(0.95);
+        }
+		</style>
+</head>
+<body>
+
+    <header class ="header">
+        <nav>
+            <div class="logo">
+                <img src="logo.png" alt="Logo">
+                <h1 class="text-white">GENIFYSUITE</h1>
+            </div>
+            <ul class="nav-links">
+                <li class="dropdown">
+                    <button class="dropbtn"><a href="index.html">Home</a></button>
+                </li>
+                <li class="dropdown">
+                    <button class="dropbtn"><a href="validator.html">Validator</a></button>
+                </li>
+                <li class="dropdown">
+                    <button class="dropbtn"><a href="generator.html">Generator</a></button>
+                </li>
+                <li class="dropdown">
+                    <button class="dropbtn"><a href="#">Tools</a></button>
+                    <div class="dropdown-content">
+                        <a href="lorem_ipsum-generator.html">Lorem Ipsum Generator</a>
+                        <a href="profile-gen.html">Profile Generator</a>
+                        <a href="ip-finder.html">IP Address Finder</a>
+                    </div>
+                </li>
+                <li class="dropdown">
+                    <button class="dropbtn"><a href="about.html">About Us</a></button>
+                </li>
+            </ul>
+        </nav>
+    </header> 
+    <main>
+        <div class="flex flex-col w-[1000px] pt-10 items-center justify-center min-h-screen bg-background text-foreground ">
+            <h1 class="text-3xl font-bold mb-4">Random User Data Generator</h1>
+            <p class="text-muted-foreground mb-6">Generate random user data. These random users are generated from the help of <a href="https://randomuser.me" class="text-primary">randomuser.me's API</a>.</p>
+            
+            <div class="bg-card p-6 rounded-lg shadow-lg w-full max-w-md">
+                <div class="mb-4">
+                    <label for="gender" class="block text-sm font-medium">Gender</label>
+                    <select id="gender" class="mt-1 block w-full border border-border rounded-md p-2 bg-input">
+                        <option>Random</option>
+                        <option>Male</option>
+                        <option>Female</option>
+                    </select>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="quantity" class="block text-sm font-medium">Quantity</label>
+                    <select id="quantity" class="mt-1 block w-full border border-border rounded-md p-2 bg-input">
+                        <option>10</option>
+                        <option>20</option>
+                        <option>30</option>
+                        <option>40</option>
+                        <option>50</option>
+                    </select>
+                </div>
+                
+                <fieldset class="mb-4">
+                    <legend class="block text-sm font-medium">Nationalities</legend>
+                    <div class="flex flex-wrap">
+                        <label class="flex items-center mr-4">
+                            <input type="checkbox" value="AU" class="mr-2"> AU
+                        </label>
+                        <label class="flex items-center mr-4">
+                            <input type="checkbox" value="BR" class="mr-2"> BR
+                        </label>
+                        <label class="flex items-center mr-4">
+                            <input type="checkbox" value="CA" class="mr-2"> CA
+                        </label>
+                        <label class="flex items-center mr-4">
+                            <input type="checkbox" value="CH" class="mr-2"> CH
+                        </label>
+                        <label class="flex items-center mr-4">
+                            <input type="checkbox" value="DE" class="mr-2"> DE
+                        </label>
+                        <label class="flex items-center mr-4">
+                            <input type="checkbox" value="DK" class="mr-2"> DK
+                        </label>
+                        <label class="flex items-center mr-4">
+                            <input type="checkbox" value="ES" class="mr-2"> ES
+                        </label>
+                        <label class="flex items-center mr-4">
+                            <input type="checkbox" value="FI" class="mr-2"> FI
+                        </label>
+                        <label class="flex items-center mr-4">
+                            <input type="checkbox" value="FR" class="mr-2"> FR
+                        </label>
+                        <label class="flex items-center mr-4">
+                            <input type="checkbox" value="GB" class="mr-2"> GB
+                        </label>
+                        <label class="flex items-center mr-4">
+                            <input type="checkbox" value="IE" class="mr-2"> IE
+                        </label>
+                        <label class="flex items-center mr-4">
+                            <input type="checkbox" value="IN" class="mr-2" checked> IN
+                        </label>
+                        <label class="flex items-center mr-4">
+                            <input type="checkbox" value="MX" class="mr-2"> MX
+                        </label>
+                        <label class="flex items-center mr-4">
+                            <input type="checkbox" value="NL" class="mr-2"> NL
+                        </label>
+                        <label class="flex items-center mr-4">
+                            <input type="checkbox" value="NO" class="mr-2"> NO
+                        </label>
+                        <label class="flex items-center mr-4">
+                            <input type="checkbox" value="RS" class="mr-2"> RS
+                        </label>
+                        <label class="flex items-center mr-4">
+                            <input type="checkbox" value="TR" class="mr-2"> TR
+                        </label>
+                        <label class="flex items-center mr-4">
+                            <input type="checkbox" value="UA" class="mr-2"> UA
+                        </label>
+                        <label class="flex items-center mr-4">
+                            <input type="checkbox" value="US" class="mr-2"> US
+                        </label>
+                    </div>
+                </fieldset>
+                
+                <button class="mt-4 bg-green-500 text-white hover:bg-green-600 p-2 rounded-md" onclick="generateProfiles()">Generate</button>
+            </div>
+            
+            
+            <div id="profiles-container" class="p-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+              
+            </div>
+        </div>
+    </main>
+
+
+     
+    <footer>
+        <p>&copy; <span id="current-year"></span> All rights reserved.</p>
+    </footer>
+
+
+    <script src="scripts.js"></script>
+</body>
+</html>

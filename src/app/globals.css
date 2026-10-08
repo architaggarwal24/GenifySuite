@@ -1,0 +1,83 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Dark theme (default). Values are "R G B" so Tailwind's opacity
+       modifiers (bg-brass/10, etc.) work via rgb(var(--x) / <alpha>). */
+    --color-ink: 18 21 27;
+    --color-ink-raised: 25 29 37;
+    --color-ink-line: 38 43 53;
+
+    --color-paper: 237 234 225;
+    --color-paper-dim: 169 163 153;
+    --color-paper-faint: 110 106 98;
+
+    --color-brass: 232 163 61;
+    --color-brass-dim: 185 127 43;
+    --color-brass-soft: 58 46 26;
+
+    --color-sage: 127 182 158;
+    --color-sage-dim: 79 122 104;
+    --color-sage-soft: 28 42 36;
+
+    --color-rust: 224 101 79;
+    --color-rust-dim: 168 73 47;
+    --color-rust-soft: 46 29 24;
+
+    color-scheme: dark;
+  }
+
+  :root[data-theme="light"] {
+    --color-ink: 244 240 231;
+    --color-ink-raised: 255 255 255;
+    --color-ink-line: 221 214 199;
+
+    --color-paper: 27 31 39;
+    --color-paper-dim: 91 88 80;
+    --color-paper-faint: 138 132 120;
+
+    --color-brass: 179 110 15;
+    --color-brass-dim: 143 88 12;
+    --color-brass-soft: 251 235 209;
+
+    --color-sage: 47 121 92;
+    --color-sage-dim: 34 92 70;
+    --color-sage-soft: 224 241 234;
+
+    --color-rust: 181 61 39;
+    --color-rust-dim: 145 49 31;
+    --color-rust-soft: 250 227 221;
+
+    color-scheme: light;
+  }
+
+  * {
+    @apply border-ink-line;
+  }
+  body {
+    @apply bg-ink text-paper font-body antialiased transition-colors duration-200;
+  }
+  h1, h2, h3, h4 {
+    @apply font-display;
+  }
+  ::selection {
+    @apply bg-brass/30 text-paper;
+  }
+}
+
+@layer utilities {
+  .focus-ring {
+    @apply outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-ink;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

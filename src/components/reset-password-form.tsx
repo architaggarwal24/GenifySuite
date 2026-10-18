@@ -48,8 +48,8 @@ export function ResetPasswordForm() {
 
   if (!token) {
     return (
-      <div className="mx-auto max-w-sm px-5 py-16">
-        <h1 className="text-2xl font-semibold text-paper">Reset link missing</h1>
+      <div className="mx-auto max-w-md px-5 py-20">
+        <h1 className="text-3xl font-semibold tracking-tight text-paper">Reset link missing</h1>
         <p className="mt-2 text-sm text-paper-dim">
           This page needs the link from your reset email.{" "}
           <Link href="/forgot-password" className="text-brass hover:underline">
@@ -62,8 +62,8 @@ export function ResetPasswordForm() {
   }
 
   return (
-    <div className="mx-auto max-w-sm px-5 py-16">
-      <h1 className="text-2xl font-semibold text-paper">Choose a new password</h1>
+    <div className="mx-auto max-w-md px-5 py-20">
+      <h1 className="text-3xl font-semibold tracking-tight text-paper">Choose a new password</h1>
 
       <Card className="mt-6">
         {done ? (

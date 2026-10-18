@@ -342,3 +342,25 @@ prisma/schema.prisma                  — database schema
 2. Register it in `src/lib/tools-registry.ts` (name, description, category).
 3. Add a page at `src/app/tools/<slug>/page.tsx` using `<ToolShell>` for consistent chrome,
    and `<SaveHistoryButton tool="<slug>" .../>` if it should support history.
+
+## Design system notes
+
+The UI is driven by CSS-variable tokens in `src/app/globals.css` (dark default, light via `data-theme="light"`).
+Token names are historical so existing components keep working: `brass` is the violet primary accent,
+`sage` is success (emerald), `rust` is danger (rose), `ink` = surfaces, `paper` = text.
+
+Reusable pieces (no extra dependencies):
+
+- `components/aurora-background.tsx` — page-wide animated aurora + grid
+- `components/spotlight-card.tsx` — cursor-following glow card
+- `components/marquee.tsx` — CSS infinite ticker
+- `components/reveal.tsx` — scroll-in animation
+- `components/section-heading.tsx` — `Eyebrow` pill + `PageHeader`
+- `.border-beam`, `.glass`, `.text-gradient(-animated)`, `.spotlight` utilities in `globals.css`
+
+## Access model
+
+- **Public:** home, `/tools` (browse the list), `/pricing`, `/about`.
+- **Preview only when signed out:** each `/tools/<slug>` page. `ToolShell` renders the tool as an inert, blurred preview with an unlock card, and opens the login/signup popup (`components/auth-modal.tsx`). `app/tools/layout.tsx` passes it the server-verified session.
+- **Enforced on the server:** every AI route (`/api/ai/*`), `/api/ip-lookup`, history, workflows, account and billing routes return 401 without a session. Dashboard and settings are also redirected by `src/proxy.ts`.
+- Open the popup from anywhere with `openAuthModal({ mode: "login" | "register" })` from `src/lib/auth-modal.ts`.

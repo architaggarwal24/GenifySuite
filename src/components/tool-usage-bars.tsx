@@ -27,9 +27,9 @@ export function ToolUsageBars({ items }: { items: ToolCount[] }) {
               <span className="text-paper-dim group-hover:text-paper">{meta?.name ?? item.tool}</span>
               <span className="font-mono text-paper-faint">{item.count}</span>
             </div>
-            <div className="h-1.5 overflow-hidden rounded-sm bg-ink">
+            <div className="h-2 overflow-hidden rounded-full bg-ink-line/60">
               <div
-                className="h-full rounded-sm bg-sage/70 transition-colors group-hover:bg-sage"
+                className="h-full rounded-full bg-gradient-to-r from-brass to-cyan-glow opacity-80 transition-opacity group-hover:opacity-100"
                 style={{ width: `${Math.max(4, (item.count / max) * 100)}%` }}
               />
             </div>

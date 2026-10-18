@@ -91,14 +91,14 @@ export default function ColorPalettePage() {
           <button
             type="button"
             onClick={handleGenerate}
-            className="focus-ring rounded border border-brass bg-brass px-4 py-2.5 text-sm font-medium text-ink hover:bg-brass/90"
+            className="focus-ring rounded-lg border border-white/10 bg-gradient-to-b from-brass to-brass-dim px-4 py-2.5 text-sm font-medium text-white shadow-glow-sm transition-all hover:shadow-glow hover:brightness-110 active:scale-[0.98]"
           >
             Generate palette
           </button>
           <button
             type="button"
             onClick={handleRandomBase}
-            className="focus-ring rounded border border-ink-line px-4 py-2.5 text-sm text-paper hover:border-paper-dim"
+            className="focus-ring rounded-lg border border-ink-line bg-ink-raised/60 px-4 py-2.5 text-sm text-paper transition-colors hover:border-brass/50 hover:bg-brass/10"
           >
             Random base
           </button>

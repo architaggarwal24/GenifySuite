@@ -10,7 +10,7 @@ export default async function AiSettingsPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-5 py-14">
-      <h1 className="text-2xl font-semibold text-paper">Settings</h1>
+      <h1 className="text-3xl font-semibold tracking-tight text-paper">Settings</h1>
       <SettingsTabs />
       <h2 className="text-lg font-medium text-paper">AI provider keys</h2>
       <p className="mt-2 max-w-lg text-paper-dim">

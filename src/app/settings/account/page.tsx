@@ -20,7 +20,7 @@ export default async function AccountSettingsPage() {
   const sub = user.subscription;
   return (
     <div className="mx-auto max-w-2xl px-5 py-14">
-      <h1 className="text-2xl font-semibold text-paper">Settings</h1>
+      <h1 className="text-3xl font-semibold tracking-tight text-paper">Settings</h1>
       <SettingsTabs />
       <AccountSettingsClient
         email={user.email}

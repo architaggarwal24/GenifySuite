@@ -19,7 +19,7 @@ export default async function BillingSettingsPage() {
 
   return (
     <div className="mx-auto max-w-xl px-5 py-14">
-      <h1 className="text-2xl font-semibold text-paper">Settings</h1>
+      <h1 className="text-3xl font-semibold tracking-tight text-paper">Settings</h1>
       <SettingsTabs />
       <p className="mb-6 text-paper-dim">Your plan for using GenifySuite's shared AI key.</p>
 

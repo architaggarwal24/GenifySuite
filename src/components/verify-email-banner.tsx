@@ -47,7 +47,7 @@ export function VerifyEmailBanner() {
   }
 
   return (
-    <div role="status" className="border-b border-brass/30 bg-brass-soft">
+    <div role="status" className="border-b border-brass/25 bg-brass/10 backdrop-blur">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-1 px-5 py-2 text-sm text-paper-dim">
         <span>
           {state === "sent"

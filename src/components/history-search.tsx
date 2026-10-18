@@ -34,7 +34,7 @@ export function HistorySearch() {
   }
 
   return (
-    <div className="mb-8 rounded border border-ink-line bg-ink-raised p-4">
+    <div className="mb-8 rounded-xl border border-ink-line bg-ink-raised/70 backdrop-blur-sm p-4">
       <div className="mb-3 flex items-center gap-2">
         <Sparkles className="h-4 w-4 text-brass" strokeWidth={1.75} />
         <h2 className="text-sm font-medium text-paper">Ask your history</h2>

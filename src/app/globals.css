@@ -5,50 +5,57 @@
 @layer base {
   :root {
     /* Dark theme (default). Values are "R G B" so Tailwind's opacity
-       modifiers (bg-brass/10, etc.) work via rgb(var(--x) / <alpha>). */
-    --color-ink: 18 21 27;
-    --color-ink-raised: 25 29 37;
-    --color-ink-line: 38 43 53;
+       modifiers (bg-brass/10, etc.) work via rgb(var(--x) / <alpha>).
 
-    --color-paper: 237 234 225;
-    --color-paper-dim: 169 163 153;
-    --color-paper-faint: 110 106 98;
+       Token names are historical: brass = primary accent (violet),
+       sage = success (emerald), rust = danger (rose). */
+    --color-ink: 9 9 13;
+    --color-ink-raised: 18 18 26;
+    --color-ink-line: 38 38 52;
 
-    --color-brass: 232 163 61;
-    --color-brass-dim: 185 127 43;
-    --color-brass-soft: 58 46 26;
+    --color-paper: 244 244 249;
+    --color-paper-dim: 163 163 182;
+    --color-paper-faint: 113 113 135;
 
-    --color-sage: 127 182 158;
-    --color-sage-dim: 79 122 104;
-    --color-sage-soft: 28 42 36;
+    --color-brass: 148 130 255;
+    --color-brass-dim: 112 96 233;
+    --color-brass-soft: 29 25 58;
 
-    --color-rust: 224 101 79;
-    --color-rust-dim: 168 73 47;
-    --color-rust-soft: 46 29 24;
+    --color-sage: 52 211 153;
+    --color-sage-dim: 16 150 104;
+    --color-sage-soft: 12 38 31;
+
+    --color-rust: 251 113 133;
+    --color-rust-dim: 214 62 88;
+    --color-rust-soft: 48 18 26;
+
+    --color-cyan: 34 211 238;
 
     color-scheme: dark;
   }
 
   :root[data-theme="light"] {
-    --color-ink: 244 240 231;
+    --color-ink: 250 250 253;
     --color-ink-raised: 255 255 255;
-    --color-ink-line: 221 214 199;
+    --color-ink-line: 226 226 238;
 
-    --color-paper: 27 31 39;
-    --color-paper-dim: 91 88 80;
-    --color-paper-faint: 138 132 120;
+    --color-paper: 16 16 28;
+    --color-paper-dim: 84 84 104;
+    --color-paper-faint: 134 134 154;
 
-    --color-brass: 179 110 15;
-    --color-brass-dim: 143 88 12;
-    --color-brass-soft: 251 235 209;
+    --color-brass: 99 80 238;
+    --color-brass-dim: 79 62 205;
+    --color-brass-soft: 236 233 255;
 
-    --color-sage: 47 121 92;
-    --color-sage-dim: 34 92 70;
-    --color-sage-soft: 224 241 234;
+    --color-sage: 5 150 105;
+    --color-sage-dim: 4 120 87;
+    --color-sage-soft: 219 246 235;
 
-    --color-rust: 181 61 39;
-    --color-rust-dim: 145 49 31;
-    --color-rust-soft: 250 227 221;
+    --color-rust: 225 29 72;
+    --color-rust-dim: 190 18 60;
+    --color-rust-soft: 255 228 234;
+
+    --color-cyan: 8 145 178;
 
     color-scheme: light;
   }
@@ -56,20 +63,168 @@
   * {
     @apply border-ink-line;
   }
+  html {
+    scroll-behavior: smooth;
+  }
   body {
-    @apply bg-ink text-paper font-body antialiased transition-colors duration-200;
+    @apply bg-ink font-body text-paper antialiased transition-colors duration-200;
+    font-feature-settings: "cv11", "ss01";
   }
   h1, h2, h3, h4 {
-    @apply font-display;
+    @apply font-display tracking-tight;
   }
   ::selection {
     @apply bg-brass/30 text-paper;
   }
+  /* Slim, quiet scrollbars */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--color-ink-line)) transparent;
+  }
+}
+
+/* Registered so the border-beam conic gradient can animate its angle. */
+@property --beam-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
 }
 
 @layer utilities {
   .focus-ring {
-    @apply outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-ink;
+    @apply outline-none focus-visible:ring-2 focus-visible:ring-brass/80 focus-visible:ring-offset-2 focus-visible:ring-offset-ink;
+  }
+
+  /* Gradient headline text (reactbits / kokonut style) */
+  .text-gradient {
+    background-image: linear-gradient(
+      135deg,
+      rgb(var(--color-paper)) 20%,
+      rgb(var(--color-brass)) 60%,
+      rgb(var(--color-cyan)) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .text-gradient-animated {
+    background-image: linear-gradient(
+      90deg,
+      rgb(var(--color-brass)),
+      rgb(var(--color-cyan)),
+      rgb(var(--color-brass))
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: gradient-pan 6s linear infinite;
+  }
+
+  /* Frosted glass surface */
+  .glass {
+    background-color: rgb(var(--color-ink-raised) / 0.6);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    backdrop-filter: blur(16px) saturate(140%);
+    border: 1px solid rgb(var(--color-paper) / 0.08);
+  }
+
+  /* Dot / grid backdrops */
+  .bg-dots {
+    background-image: radial-gradient(rgb(var(--color-paper) / 0.12) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+  .bg-grid-fade {
+    background-image:
+      linear-gradient(to right, rgb(var(--color-paper) / 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(var(--color-paper) / 0.05) 1px, transparent 1px);
+    background-size: 56px 56px;
+    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 30%, transparent 75%);
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 30%, transparent 75%);
+  }
+
+  /* Rotating gradient border that follows the element's rounded edge
+     (animos / reactbits "border beam"). Parent needs `relative` + a radius. */
+  .border-beam::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: conic-gradient(
+      from var(--beam-angle),
+      transparent 0%,
+      rgb(var(--color-brass)) 12%,
+      rgb(var(--color-cyan)) 24%,
+      transparent 38%
+    );
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: beam-spin 6s linear infinite;
+    pointer-events: none;
+  }
+  /* Mouse-follow spotlight used by <SpotlightCard>. */
+  .spotlight::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    background: radial-gradient(
+      420px circle at var(--mx, 50%) var(--my, 50%),
+      rgb(var(--color-brass) / 0.16),
+      transparent 60%
+    );
+    pointer-events: none;
+  }
+  .spotlight:hover::after {
+    opacity: 1;
+  }
+  .spotlight::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    background: radial-gradient(
+      260px circle at var(--mx, 50%) var(--my, 50%),
+      rgb(var(--color-brass) / 0.9),
+      transparent 65%
+    );
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+  .spotlight:hover::before {
+    opacity: 1;
+  }
+
+  /* Soft edge fade for marquees */
+  .mask-fade-x {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+    mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+  }
+
+  /* Scroll reveal states (see components/reveal.tsx) */
+  .reveal-hidden {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  .reveal-shown {
+    opacity: 1;
+    transform: none;
+    transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+@keyframes beam-spin {
+  to {
+    --beam-angle: 360deg;
   }
 }
 

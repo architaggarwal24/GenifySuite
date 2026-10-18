@@ -14,16 +14,16 @@ export function SettingsTabs() {
   const pathname = usePathname();
 
   return (
-    <div className="mb-8 flex gap-1 border-b border-ink-line">
+    <div className="mb-8 inline-flex gap-1 rounded-xl border border-ink-line bg-ink-raised/60 p-1 backdrop-blur-sm">
       {TABS.map((tab) => (
         <Link
           key={tab.href}
           href={tab.href}
           className={cn(
-            "focus-ring -mb-px border-b-2 px-3 py-2 text-sm transition-colors",
+            "focus-ring rounded-lg px-3.5 py-1.5 text-sm transition-all",
             pathname === tab.href
-              ? "border-brass text-paper"
-              : "border-transparent text-paper-faint hover:text-paper-dim"
+              ? "bg-brass/15 text-paper shadow-glow-sm"
+              : "text-paper-faint hover:bg-paper/5 hover:text-paper-dim"
           )}
         >
           {tab.label}

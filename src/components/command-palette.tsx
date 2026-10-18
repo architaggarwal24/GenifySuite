@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { ToolIcon } from "@/components/tool-icon";
 import { CATEGORY_ORDER, TOOLS } from "@/lib/tools-registry";
 import { THEME_STORAGE_KEY } from "@/lib/theme";
+import { openAuthModal } from "@/lib/auth-modal";
 
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
@@ -68,19 +69,19 @@ export function CommandPalette() {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center bg-ink/70 px-4 pt-[12vh] backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-start justify-center bg-ink/60 px-4 pt-[12vh] backdrop-blur-md"
       onClick={() => setOpen(false)}
     >
       <Command
         loop
         label="Command palette"
-        className="w-full max-w-lg overflow-hidden rounded border border-ink-line bg-ink-raised shadow-2xl"
+        className="glass w-full max-w-xl overflow-hidden rounded-2xl shadow-2xl shadow-black/40"
         onClick={(e) => e.stopPropagation()}
       >
         <Command.Input
           autoFocus
           placeholder="Jump to a tool or action…"
-          className="focus-ring w-full border-b border-ink-line bg-transparent px-4 py-3 text-sm text-paper placeholder:text-paper-faint"
+          className="focus-ring w-full border-b border-ink-line bg-transparent px-4 py-3.5 text-sm text-paper placeholder:text-paper-faint"
         />
         <Command.List className="max-h-[60vh] overflow-y-auto p-2">
           <Command.Empty className="px-3 py-6 text-center text-sm text-paper-faint">
@@ -98,7 +99,7 @@ export function CommandPalette() {
                   key={tool.slug}
                   value={`${tool.name} ${tool.description}`}
                   onSelect={() => go(`/tools/${tool.slug}`)}
-                  className="flex cursor-pointer items-center gap-2.5 rounded px-2.5 py-2 text-sm text-paper data-[selected=true]:bg-brass/10"
+                  className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-paper data-[selected=true]:bg-brass/10"
                 >
                   <ToolIcon name={tool.icon} className="text-paper-dim" />
                   {tool.name}
@@ -114,14 +115,14 @@ export function CommandPalette() {
             <Command.Item
               value="home"
               onSelect={() => go("/")}
-              className="cursor-pointer rounded px-2.5 py-2 text-sm text-paper data-[selected=true]:bg-brass/10"
+              className="cursor-pointer rounded-lg px-2.5 py-2 text-sm text-paper data-[selected=true]:bg-brass/10"
             >
               Home
             </Command.Item>
             <Command.Item
               value="all tools"
               onSelect={() => go("/tools")}
-              className="cursor-pointer rounded px-2.5 py-2 text-sm text-paper data-[selected=true]:bg-brass/10"
+              className="cursor-pointer rounded-lg px-2.5 py-2 text-sm text-paper data-[selected=true]:bg-brass/10"
             >
               All tools
             </Command.Item>
@@ -130,14 +131,14 @@ export function CommandPalette() {
                 <Command.Item
                   value="dashboard history"
                   onSelect={() => go("/dashboard")}
-                  className="cursor-pointer rounded px-2.5 py-2 text-sm text-paper data-[selected=true]:bg-brass/10"
+                  className="cursor-pointer rounded-lg px-2.5 py-2 text-sm text-paper data-[selected=true]:bg-brass/10"
                 >
                   Dashboard
                 </Command.Item>
                 <Command.Item
                   value="settings ai keys"
                   onSelect={() => go("/settings/ai")}
-                  className="cursor-pointer rounded px-2.5 py-2 text-sm text-paper data-[selected=true]:bg-brass/10"
+                  className="cursor-pointer rounded-lg px-2.5 py-2 text-sm text-paper data-[selected=true]:bg-brass/10"
                 >
                   Settings
                 </Command.Item>
@@ -146,7 +147,7 @@ export function CommandPalette() {
             <Command.Item
               value="toggle theme dark light"
               onSelect={toggleTheme}
-              className="cursor-pointer rounded px-2.5 py-2 text-sm text-paper data-[selected=true]:bg-brass/10"
+              className="cursor-pointer rounded-lg px-2.5 py-2 text-sm text-paper data-[selected=true]:bg-brass/10"
             >
               Toggle theme
             </Command.Item>
@@ -157,15 +158,18 @@ export function CommandPalette() {
                   setOpen(false);
                   signOut({ callbackUrl: "/" });
                 }}
-                className="cursor-pointer rounded px-2.5 py-2 text-sm text-rust data-[selected=true]:bg-rust/10"
+                className="cursor-pointer rounded-lg px-2.5 py-2 text-sm text-rust data-[selected=true]:bg-rust/10"
               >
                 Sign out
               </Command.Item>
             ) : (
               <Command.Item
                 value="sign in"
-                onSelect={() => go("/login")}
-                className="cursor-pointer rounded px-2.5 py-2 text-sm text-paper data-[selected=true]:bg-brass/10"
+                onSelect={() => {
+                  setOpen(false);
+                  openAuthModal({ mode: "login" });
+                }}
+                className="cursor-pointer rounded-lg px-2.5 py-2 text-sm text-paper data-[selected=true]:bg-brass/10"
               >
                 Sign in
               </Command.Item>

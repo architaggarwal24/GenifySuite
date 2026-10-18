@@ -1,10 +1,10 @@
 "use client";
 
 import { Sparkles } from "lucide-react";
-import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useState, type ReactNode } from "react";
 import { AiKeyPicker, type KeySelection } from "@/components/ai-key-picker";
+import { openAuthModal } from "@/lib/auth-modal";
 
 /**
  * A consistent "AI assist" block for tools that are deterministic by default
@@ -30,9 +30,9 @@ export function AiAssistSection({
 
       {status === "unauthenticated" && (
         <p className="text-sm text-paper-dim">
-          <Link href="/login" className="text-brass hover:underline">
+          <button type="button" onClick={() => openAuthModal({ mode: "login" })} className="text-brass hover:underline">
             Sign in
-          </Link>{" "}
+          </button>{" "}
           to use AI assist with your own key.
         </p>
       )}

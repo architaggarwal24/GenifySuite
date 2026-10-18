@@ -1,6 +1,7 @@
 import type { HistoryItem } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
+import { PageHeader } from "@/components/section-heading";
 import { ActivityChart } from "@/components/activity-chart";
 import { activitySince, buildActivityWindow, utcDayStart } from "@/lib/activity";
 import { DashboardQuickLinks } from "@/components/dashboard-quick-links";
@@ -72,8 +73,11 @@ export default async function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-5 py-14">
-      <h1 className="text-2xl font-semibold text-paper">Dashboard</h1>
-      <p className="mt-2 text-paper-dim">Signed in as {session.user.email ?? session.user.name}.</p>
+      <PageHeader
+        eyebrow={`${plan.name} plan`}
+        title="Dashboard"
+        description={`Signed in as ${session.user.email ?? session.user.name}.`}
+      />
 
       <div className="mt-8">
         <DashboardQuickLinks />
@@ -91,12 +95,12 @@ export default async function DashboardPage() {
       </div>
 
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="rounded border border-ink-line bg-ink-raised p-4 lg:col-span-2">
-          <h2 className="mb-4 text-sm font-medium text-paper">Last {ACTIVITY_DAYS} days</h2>
+        <div className="rounded-2xl border border-ink-line bg-ink-raised/70 p-5 shadow-card backdrop-blur-sm lg:col-span-2">
+          <h2 className="mb-5 font-display text-sm font-semibold text-paper">Last {ACTIVITY_DAYS} days</h2>
           <ActivityChart days={activityDays} />
         </div>
-        <div className="rounded border border-ink-line bg-ink-raised p-4">
-          <h2 className="mb-4 text-sm font-medium text-paper">Most used tools</h2>
+        <div className="rounded-2xl border border-ink-line bg-ink-raised/70 p-5 shadow-card backdrop-blur-sm">
+          <h2 className="mb-5 font-display text-sm font-semibold text-paper">Most used tools</h2>
           <ToolUsageBars
             items={topTools.map((t: { tool: string; _count: { _all: number } }) => ({ tool: t.tool, count: t._count._all }))}
           />
@@ -104,7 +108,7 @@ export default async function DashboardPage() {
       </div>
 
       <div className="mt-10">
-        <h2 className="mb-4 text-lg font-semibold text-paper">Recent history</h2>
+        <h2 className="mb-4 font-display text-xl font-semibold tracking-tight text-paper">Recent history</h2>
         <HistorySearch />
         <HistoryList initialItems={dto} />
       </div>

@@ -1,4 +1,6 @@
+import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
+import { authOptions } from "@/lib/auth";
 
 const IP_V4_REGEX = /^(\d{1,3}\.){3}\d{1,3}$/;
 const IP_V6_REGEX = /^[0-9a-fA-F:]+$/;
@@ -11,6 +13,12 @@ function isValidIp(value: string): boolean {
 }
 
 export async function GET(request: Request) {
+  // This is a server-side proxy to a third-party API, so it is for signed-in users only.
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Sign in to use the IP finder." }, { status: 401 });
+  }
+
   const { searchParams } = new URL(request.url);
   let ip = searchParams.get("ip")?.trim();
 

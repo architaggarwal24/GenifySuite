@@ -3,7 +3,7 @@ interface DayCount {
   count: number;
 }
 
-/** A plain CSS bar chart - no charting library, matches the flat/hairline design system. */
+/** A plain CSS bar chart - no charting library. Gradient bars that lift on hover. */
 export function ActivityChart({ days }: { days: DayCount[] }) {
   const max = Math.max(1, ...days.map((d) => d.count));
   const total = days.reduce((sum, d) => sum + d.count, 0);
@@ -17,12 +17,12 @@ export function ActivityChart({ days }: { days: DayCount[] }) {
   }
 
   return (
-    <div className="flex h-28 items-end gap-1.5">
+    <div className="flex h-32 items-end gap-1.5">
       {days.map((d, i) => (
         <div key={i} className="group flex flex-1 flex-col items-center gap-1.5" title={`${d.label}: ${d.count}`}>
           <div className="flex w-full flex-1 items-end">
             <div
-              className="w-full rounded-t-sm bg-brass/70 transition-colors group-hover:bg-brass"
+              className="w-full rounded-t-md bg-gradient-to-t from-brass-dim/60 to-brass transition-all duration-200 group-hover:from-brass-dim group-hover:to-cyan-glow group-hover:shadow-glow-sm"
               style={{ height: `${Math.max(3, (d.count / max) * 100)}%` }}
             />
           </div>

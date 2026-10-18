@@ -1,8 +1,10 @@
+import { PageHeader } from "@/components/section-heading";
+
 export default function AboutPage() {
   return (
-    <div className="mx-auto max-w-2xl px-5 py-16">
-      <h1 className="text-2xl font-semibold text-paper">About GenifySuite</h1>
-      <div className="mt-6 space-y-4 text-paper-dim">
+    <div className="mx-auto max-w-2xl px-5 py-20">
+      <PageHeader eyebrow="Our story" title="About GenifySuite" />
+      <div className="mt-10 space-y-5 text-base leading-relaxed text-paper-dim">
         <p>
           GenifySuite started as a small HTML/CSS/JS project for learning the fundamentals of
           front-end development: a credit card validator, a few data generators, and an IP
@@ -22,7 +24,7 @@ export default function AboutPage() {
         <p>
           The test-card generator produces Luhn-valid dummy numbers for exercising checkout-form
           validation. It only uses the generic prefixes networks publish for testing (like
-          Stripe's well-known <code className="rounded bg-ink px-1 py-0.5 font-mono text-sm">4242 4242 4242 4242</code>{" "}
+          Stripe's well-known <code className="rounded-md border border-ink-line bg-ink-raised px-1.5 py-0.5 font-mono text-sm text-paper">4242 4242 4242 4242</code>{" "}
           pattern) — it does not accept an arbitrary bank identification number, and it does not
           simulate a card balance. Those numbers are not associated with real accounts and cannot
           be charged.

@@ -33,8 +33,8 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <div className="mx-auto max-w-sm px-5 py-16">
-      <h1 className="text-2xl font-semibold text-paper">Reset your password</h1>
+    <div className="mx-auto max-w-md px-5 py-20">
+      <h1 className="text-3xl font-semibold tracking-tight text-paper">Reset your password</h1>
       <p className="mt-2 text-sm text-paper-dim">Enter your email and we'll send you a link to choose a new one.</p>
 
       <Card className="mt-6">

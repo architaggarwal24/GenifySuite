@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { AuroraBackground } from "@/components/aurora-background";
+import { AuthModal } from "@/components/auth-modal";
 import { CommandPalette } from "@/components/command-palette";
 import { Footer } from "@/components/footer";
 import { Navbar } from "@/components/navbar";
@@ -21,19 +23,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap"
           rel="stylesheet"
         />
       </head>
       <body className="min-h-screen bg-ink font-body text-paper">
         <Providers>
-          <div className="flex min-h-screen flex-col">
+          <AuroraBackground />
+          <div className="relative flex min-h-screen flex-col">
             <Navbar />
             <VerifyEmailBanner />
             <main className="flex-1">{children}</main>
             <Footer />
           </div>
           <CommandPalette />
+          <AuthModal />
         </Providers>
       </body>
     </html>

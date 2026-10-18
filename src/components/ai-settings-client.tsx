@@ -183,7 +183,7 @@ export function AiSettingsClient() {
           {keys?.map((k) => (
             <div
               key={k.id}
-              className="flex items-center justify-between gap-4 rounded border border-ink-line bg-ink-raised px-4 py-3"
+              className="flex items-center justify-between gap-4 rounded-xl border border-ink-line bg-ink-raised/70 backdrop-blur-sm px-4 py-3"
             >
               <div className="min-w-0">
                 <p className="text-sm text-paper">{k.label}</p>

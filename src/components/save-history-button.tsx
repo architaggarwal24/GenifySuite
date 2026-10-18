@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { openAuthModal } from "@/lib/auth-modal";
 
 interface SaveHistoryButtonProps {
   tool: string;
@@ -20,12 +20,13 @@ export function SaveHistoryButton({ tool, label, payload, disabled }: SaveHistor
 
   if (sessionStatus === "unauthenticated") {
     return (
-      <Link
-        href="/login"
+      <button
+        type="button"
+        onClick={() => openAuthModal({ mode: "login" })}
         className="focus-ring text-sm text-paper-dim underline decoration-ink-line underline-offset-4 hover:text-paper"
       >
         Sign in to save this to your history
-      </Link>
+      </button>
     );
   }
 

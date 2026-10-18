@@ -68,7 +68,7 @@ export default function PasswordGeneratorPage() {
           <button
             type="button"
             onClick={() => regenerate()}
-            className="focus-ring rounded border border-brass px-3 py-2 text-sm font-medium text-brass hover:bg-brass/10"
+            className="focus-ring rounded-lg border border-brass/40 bg-brass/10 px-3 py-2 text-sm font-medium text-brass transition-all hover:border-brass hover:bg-brass/20"
           >
             Generate another
           </button>

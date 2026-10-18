@@ -38,7 +38,7 @@ export function HistoryList({ initialItems }: { initialItems: HistoryItemDTO[] }
       {items.map((item) => (
         <div
           key={item.id}
-          className="flex items-center justify-between gap-4 rounded border border-ink-line bg-ink-raised px-4 py-3"
+          className="flex items-center justify-between gap-4 rounded-xl border border-ink-line bg-ink-raised/70 px-4 py-3 backdrop-blur-sm transition-colors hover:border-brass/30"
         >
           <div className="min-w-0">
             <p className="truncate text-sm text-paper">{item.label}</p>

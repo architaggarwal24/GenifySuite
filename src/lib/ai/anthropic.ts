@@ -10,6 +10,7 @@ import {
   type ToolDefinition,
 } from "@/lib/ai/types";
 import { readSse } from "@/lib/ai/sse";
+import { resolveProviderUrl } from "@/lib/ai/url-safety";
 
 const ANTHROPIC_VERSION = "2023-06-01";
 
@@ -152,10 +153,12 @@ export const anthropicAdapter: AIProviderAdapter = {
 
     const streaming = Boolean(options.onText);
     const systemPrompt = request.system ?? request.messages.find((m) => m.role === "system")?.content;
-    const baseUrl = (credentials.baseUrl || "https://api.anthropic.com").replace(/\/+$/, "");
+    // The base URL can be user-supplied, so it is validated (and its DNS checked) before every request.
+    const url = await resolveProviderUrl(credentials.baseUrl || "https://api.anthropic.com", "/v1/messages");
 
-    const res = await fetch(`${baseUrl}/v1/messages`, {
+    const res = await fetch(url, {
       method: "POST",
+      redirect: "error", // a public host must not be able to bounce this request to an internal one
       signal: options.signal,
       headers: {
         "content-type": "application/json",

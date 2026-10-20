@@ -8,6 +8,9 @@ export interface RateLimitResult {
   degraded?: boolean;
 }
 
+/** Scope whose windows are 30 days long, so housekeeping must not prune it after a day. */
+const LONG_WINDOW_PREFIX = "login-known:";
+
 interface WindowInfo {
   key: string;
   windowStart: Date;
@@ -62,10 +65,15 @@ export async function consumeRateLimit(
       select: { count: true },
     });
 
-    // Housekeeping: occasionally prune windows that can no longer matter.
+    // Housekeeping: occasionally prune windows that can no longer matter. Long-window rows (the 30-day
+    // "known device" markers) get their own, longer horizon - a flat 24h would delete them almost at once.
     if (Math.random() < 0.02) {
+      const day = 24 * 60 * 60 * 1000;
       void prisma.rateLimit
-        .deleteMany({ where: { windowStart: { lt: new Date(now - 24 * 60 * 60 * 1000) } } })
+        .deleteMany({ where: { windowStart: { lt: new Date(now - day) }, NOT: { key: { startsWith: LONG_WINDOW_PREFIX } } } })
+        .catch(() => undefined);
+      void prisma.rateLimit
+        .deleteMany({ where: { windowStart: { lt: new Date(now - 35 * day) }, key: { startsWith: LONG_WINDOW_PREFIX } } })
         .catch(() => undefined);
     }
 
@@ -107,6 +115,20 @@ export async function peekRateLimit(
   }
 }
 
+/**
+ * Gives back one unit in the current window (never below zero). Pair it with consumeRateLimit for
+ * "count first, forgive on success": counting BEFORE the work closes the gap where many parallel requests
+ * all pass a read-only check, and refunding after a success keeps good behaviour free.
+ */
+export async function refundRateLimit(scope: string, id: string, windowSeconds: number, now: number = Date.now()): Promise<void> {
+  const info = windowFor(scope, id, windowSeconds, now);
+  try {
+    await prisma.rateLimit.updateMany({ where: { key: info.key, count: { gt: 0 } }, data: { count: { decrement: 1 } } });
+  } catch (err) {
+    degraded(1, info, err, now); // only logs; a failed refund just means one extra counted event
+  }
+}
+
 export interface RateLimitCheck {
   scope: string;
   /** null/empty skips the check (e.g. an unknown client IP) instead of pooling everyone into one bucket. */
@@ -140,6 +162,9 @@ export const AUTH_RATE_LIMITS = {
   loginFailedPair: { limit: 8, windowSeconds: QUARTER_HOUR },
   loginFailedIp: { limit: 40, windowSeconds: QUARTER_HOUR },
   loginFailedEmail: { limit: 40, windowSeconds: QUARTER_HOUR },
+  // A device that has signed into an account before. The per-account cap above doesn't apply to it, so a
+  // stranger flooding failures at your email can't lock you out of the address you normally use.
+  loginKnownDevice: { limit: 1, windowSeconds: 30 * 24 * HOUR },
   // Everything below counts every request, because each one costs us something (an email, a hash).
   registerIp: { limit: 10, windowSeconds: HOUR },
   forgotEmail: { limit: 3, windowSeconds: HOUR },
@@ -148,4 +173,12 @@ export const AUTH_RATE_LIMITS = {
   verifyIp: { limit: 30, windowSeconds: HOUR },
   resendVerification: { limit: 3, windowSeconds: HOUR },
   passwordChange: { limit: 5, windowSeconds: QUARTER_HOUR },
+} as const;
+
+// Per-user caps on routes that spend a shared resource or write to the database.
+export const RESOURCE_RATE_LIMITS = {
+  // ip-api.com's free tier allows ~45 requests/minute for the whole server, so the app-wide cap sits below that.
+  ipLookupUser: { limit: 15, windowSeconds: 60 },
+  ipLookupAll: { limit: 40, windowSeconds: 60 },
+  historyWrite: { limit: 60, windowSeconds: 60 },
 } as const;

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { finishAiRequest, resolveAiRequest } from "@/lib/ai/credentials";
+import { refundIfFree, resolveAiRequest, type ResolvedAiRequest } from "@/lib/ai/credentials";
 import { AI_FEATURES } from "@/lib/ai/features";
 import { aiErrorResponse } from "@/lib/ai/http";
 
@@ -40,8 +40,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid input." }, { status: 400 });
   }
 
+  let resolved: ResolvedAiRequest | undefined;
   try {
-    const resolved = await resolveAiRequest({
+    resolved = await resolveAiRequest({
       apiKeyId: parsed.data.apiKeyId,
       useShared: parsed.data.useShared,
     });
@@ -56,9 +57,9 @@ export async function POST(request: Request) {
       input
     );
 
-    await finishAiRequest(resolved);
     return NextResponse.json({ result });
   } catch (err) {
+    await refundIfFree(resolved, err);
     return aiErrorResponse(err);
   }
 }

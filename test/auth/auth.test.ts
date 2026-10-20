@@ -24,6 +24,7 @@ async function makeUser(overrides: Record<string, unknown> = {}) {
 const login = (email: string, password: string, headers: Record<string, unknown> = IP) => authorizeCredentials({ email, password }, headers);
 
 beforeEach(() => db.__reset());
+afterEach(() => vi.unstubAllEnvs());
 
 describe("authorizeCredentials", () => {
   it("signs in with the right password, ignoring email case and padding", async () => {
@@ -97,6 +98,42 @@ describe("authorizeCredentials", () => {
       await makeUser();
       for (let i = 0; i < 8; i++) await login("alice@example.com", "bad", { "x-forwarded-for": ["198.51.100.7, 10.0.0.1"] });
       await expect(login("alice@example.com", PASSWORD, { "x-forwarded-for": "198.51.100.7" })).rejects.toThrow(LOGIN_RATE_LIMITED);
+    });
+
+    it("cannot be out-run by firing many guesses at once - only the allowed few are ever checked against the password", async () => {
+      await makeUser();
+      const compare = vi.spyOn(bcrypt, "compare");
+      await Promise.all(Array.from({ length: 40 }, (_, i) => login("alice@example.com", `guess${i}`).catch(() => "blocked")));
+      expect(compare.mock.calls.length).toBeLessThanOrEqual(8);
+      await expect(login("alice@example.com", PASSWORD)).rejects.toThrow(LOGIN_RATE_LIMITED);
+    });
+
+    it("also holds when parallel guesses come from rotating addresses", async () => {
+      await makeUser();
+      const compare = vi.spyOn(bcrypt, "compare");
+      await Promise.all(Array.from({ length: 100 }, (_, i) => login("alice@example.com", `guess${i}`, { "x-forwarded-for": `10.9.${i}.1` }).catch(() => "blocked")));
+      expect(compare.mock.calls.length).toBeLessThanOrEqual(40);
+    });
+
+    it("a stranger flooding your account from other addresses can't lock out a device you've signed in from before", async () => {
+      await makeUser();
+      expect(await login("alice@example.com", PASSWORD)).toBeTruthy(); // signs in from the usual address (IP)
+      for (let i = 0; i < 45; i++) await login("alice@example.com", `guess${i}`, { "x-forwarded-for": `10.8.${i}.1` }).catch(() => null);
+      expect(await login("alice@example.com", PASSWORD)).toBeTruthy(); // usual address: still fine
+      await expect(login("alice@example.com", PASSWORD, { "x-forwarded-for": "203.0.113.200" })).rejects.toThrow(LOGIN_RATE_LIMITED); // unknown address: held by the per-account cap
+    });
+
+    it("the 'known address' exemption is earned by a successful sign-in, not by trying", async () => {
+      await makeUser();
+      for (let i = 0; i < 45; i++) await login("alice@example.com", `guess${i}`, { "x-forwarded-for": `10.7.${i}.1` }).catch(() => null);
+      await expect(login("alice@example.com", PASSWORD)).rejects.toThrow(LOGIN_RATE_LIMITED);
+    });
+
+    it("refuses to run in production with the placeholder secret from .env.example", async () => {
+      await makeUser();
+      vi.stubEnv("NODE_ENV", "production");
+      vi.stubEnv("NEXTAUTH_SECRET", "replace-with-a-random-32-byte-secret");
+      await expect(login("alice@example.com", PASSWORD)).rejects.toThrow(/NEXTAUTH_SECRET/);
     });
 
     it("fails open - sign-in keeps working if the limiter's table is unavailable", async () => {

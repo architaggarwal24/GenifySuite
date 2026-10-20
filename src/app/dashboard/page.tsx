@@ -13,6 +13,7 @@ import { authOptions } from "@/lib/auth";
 import { getPlan } from "@/lib/billing";
 import { checkUsage } from "@/lib/ai/usage";
 import { prisma } from "@/lib/prisma";
+import { effectiveTier } from "@/lib/billing-status";
 
 export const dynamic = "force-dynamic";
 
@@ -64,7 +65,7 @@ export default async function DashboardPage() {
     count,
   }));
 
-  const tier = subscription?.tier ?? "FREE";
+  const tier = effectiveTier(subscription);
   const plan = getPlan(tier);
   const [sharedUsage, byokUsage] = await Promise.all([
     checkUsage(userId, true, tier),

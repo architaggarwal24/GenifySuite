@@ -8,12 +8,15 @@ type Row = Record<string, any>;
 
 function matches(row: Row, where: Row = {}): boolean {
   return Object.entries(where).every(([key, value]) => {
+    if (key === "NOT") return !matches(row, value as Row);
     if (value && typeof value === "object" && !(value instanceof Date)) {
+      if ("startsWith" in value && !String(row[key]).startsWith(value.startsWith)) return false;
+      if ("gt" in value && !(row[key] > value.gt)) return false;
       if ("gte" in value && !(row[key] >= value.gte)) return false;
       if ("lt" in value && !(row[key] < value.lt)) return false;
       if ("in" in value && !value.in.includes(row[key])) return false;
       if ("not" in value && row[key] === value.not) return false;
-      const isOperator = ["gte", "lt", "in", "not"].some((op) => op in value);
+      const isOperator = ["startsWith", "gt", "gte", "lt", "in", "not"].some((op) => op in value);
       // Composite unique selector, e.g. { userId_date: { userId, date } }
       if (!isOperator) return Object.entries(value).every(([k, v]) => row[k] === v);
       return true;
@@ -26,6 +29,8 @@ function applyUpdate(row: Row, data: Row): void {
   for (const [key, value] of Object.entries(data)) {
     if (value && typeof value === "object" && !(value instanceof Date) && "increment" in value) {
       row[key] = (row[key] ?? 0) + value.increment;
+    } else if (value && typeof value === "object" && !(value instanceof Date) && "decrement" in value) {
+      row[key] = (row[key] ?? 0) - value.decrement;
     } else {
       row[key] = value;
     }

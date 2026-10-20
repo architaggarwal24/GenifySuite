@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { prisma } from "@/lib/prisma";
-import { consumeRateLimit, peekRateLimit } from "./rate-limit";
+import { consumeRateLimit, peekRateLimit, refundRateLimit } from "./rate-limit";
 import type { FakePrisma } from "../../test/fake-prisma";
 
 vi.mock("@/lib/prisma", async () => {
@@ -76,5 +76,55 @@ describe("peekRateLimit", () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     vi.spyOn(db.rateLimit, "findUnique").mockRejectedValue(new Error("db down"));
     expect(await peekRateLimit("t", "u1", 2, 60, T0 + 20 * 60_000)).toMatchObject({ allowed: true, degraded: true });
+  });
+});
+
+describe("refundRateLimit", () => {
+  it("gives back one unit of the current window", async () => {
+    for (let i = 0; i < 5; i++) await consumeRateLimit("t", "u1", 5, 60, T0);
+    expect((await consumeRateLimit("t", "u1", 5, 60, T0)).allowed).toBe(false); // 6th: over
+    await refundRateLimit("t", "u1", 60, T0); // 6 -> 5
+    await refundRateLimit("t", "u1", 60, T0); // 5 -> 4
+    expect((await consumeRateLimit("t", "u1", 5, 60, T0)).allowed).toBe(true); // 4 -> 5
+  });
+
+  it("never goes below zero and ignores a window with no row", async () => {
+    await refundRateLimit("t", "nobody", 60, T0);
+    await consumeRateLimit("t", "u1", 5, 60, T0);
+    await refundRateLimit("t", "u1", 60, T0);
+    await refundRateLimit("t", "u1", 60, T0);
+    await refundRateLimit("t", "u1", 60, T0);
+    expect((await peekRateLimit("t", "u1", 5, 60, T0)).remaining).toBe(5);
+  });
+
+  it("only touches its own scope and id", async () => {
+    await consumeRateLimit("t", "u1", 5, 60, T0);
+    await consumeRateLimit("t", "u2", 5, 60, T0);
+    await refundRateLimit("t", "u1", 60, T0);
+    expect((await peekRateLimit("t", "u2", 5, 60, T0)).remaining).toBe(4);
+  });
+
+  it("swallows store errors instead of breaking the request", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(db.rateLimit, "updateMany").mockRejectedValue(new Error("no such table"));
+    await expect(refundRateLimit("t", "u1", 60, T0)).resolves.toBeUndefined();
+  });
+});
+
+describe("housekeeping", () => {
+  it("prunes old short windows but keeps long-lived rows like the 30-day known-device markers", async () => {
+    const day = 24 * 60 * 60 * 1000;
+    db.rateLimit.__rows.push({ key: "t:old:1", count: 3, windowStart: new Date(T0 - 2 * day) });
+    db.rateLimit.__rows.push({ key: "login-known:a@b.c|1.2.3.4:1", count: 1, windowStart: new Date(T0 - 10 * day) });
+    db.rateLimit.__rows.push({ key: "login-known:old@b.c|1.2.3.4:1", count: 1, windowStart: new Date(T0 - 40 * day) });
+    vi.spyOn(Math, "random").mockReturnValue(0); // always run the housekeeping branch
+
+    await consumeRateLimit("t", "u1", 5, 60, T0);
+    await new Promise((resolve) => setTimeout(resolve, 0)); // the prune is fire-and-forget
+
+    const keys = db.rateLimit.__rows.map((r) => r.key);
+    expect(keys).not.toContain("t:old:1");
+    expect(keys).toContain("login-known:a@b.c|1.2.3.4:1");
+    expect(keys).not.toContain("login-known:old@b.c|1.2.3.4:1");
   });
 });

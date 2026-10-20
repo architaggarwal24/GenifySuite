@@ -4,6 +4,7 @@ import { PricingCard } from "@/components/pricing-card";
 import { authOptions } from "@/lib/auth";
 import { PLANS } from "@/lib/billing";
 import { prisma } from "@/lib/prisma";
+import { effectiveTier } from "@/lib/billing-status";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +13,7 @@ export default async function PricingPage() {
   const subscription = session?.user?.id
     ? await prisma.subscription.findUnique({ where: { userId: session.user.id } })
     : null;
-  const currentTier = subscription?.tier ?? "FREE";
+  const currentTier = effectiveTier(subscription);
 
   return (
     <div className="mx-auto max-w-5xl px-5 py-20">

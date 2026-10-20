@@ -1,7 +1,8 @@
 import { getServerSession } from "next-auth";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { AiRequestDenied, finishAiRequest, resolveAiRequest } from "@/lib/ai/credentials";
-import { BYOK_DAILY_LIMIT, SHARED_KEY_DAILY_LIMIT } from "@/lib/ai/usage";
+import { AiRequestDenied, refundAiRequest, refundIfFree, resolveAiRequest } from "@/lib/ai/credentials";
+import { AiOutputError } from "@/lib/ai/errors";
+import { BYOK_DAILY_LIMIT, SHARED_KEY_DAILY_LIMIT, recordUsage } from "@/lib/ai/usage";
 import { encryptSecret } from "@/lib/crypto";
 import { prisma } from "@/lib/prisma";
 import type { FakePrisma } from "../fake-prisma";
@@ -106,8 +107,9 @@ describe("resolveAiRequest: the shared key", () => {
 describe("resolveAiRequest: limits", () => {
   it("applies the per-minute burst limit (6 shared, 20 own key) with a retry hint", async () => {
     signedIn("u1");
+    await db.subscription.create({ data: { userId: "u1", tier: "STARTER" } }); // big enough daily allowance that the burst limit is what trips
     for (let i = 0; i < 6; i++) await resolveAiRequest({ useShared: true });
-    // The 7th hits the per-minute burst limit. (The 3-a-day free allowance isn't spent until requests SUCCEED.)
+    // The 7th hits the per-minute burst limit.
     const err = await denied(resolveAiRequest({ useShared: true }));
     expect(err.status).toBe(429);
     expect(err.retryAfterSeconds).toBeGreaterThan(0);
@@ -119,12 +121,9 @@ describe("resolveAiRequest: limits", () => {
     expect((await denied(resolveAiRequest({ apiKeyId: key.id }))).status).toBe(429);
   });
 
-  it("enforces the free tier's daily shared-key allowance - counted on success, not on attempt", async () => {
+  it("enforces the free tier's daily shared-key allowance - taken when the request is accepted, so a dropped connection can't dodge it", async () => {
     signedIn("u1");
-    for (let i = 0; i < SHARED_KEY_DAILY_LIMIT.FREE; i++) {
-      const resolved = await resolveAiRequest({ useShared: true });
-      await finishAiRequest(resolved);
-    }
+    for (let i = 0; i < SHARED_KEY_DAILY_LIMIT.FREE; i++) await resolveAiRequest({ useShared: true });
     const err = await denied(resolveAiRequest({ useShared: true }));
     expect(err.status).toBe(429);
     expect(err.message).toMatch(/shared key/);
@@ -133,23 +132,26 @@ describe("resolveAiRequest: limits", () => {
   it("gives a paying tier a bigger allowance", async () => {
     signedIn("u1");
     await db.subscription.create({ data: { userId: "u1", tier: "STARTER" } });
-    for (let i = 0; i < SHARED_KEY_DAILY_LIMIT.FREE + 2; i++) await finishAiRequest(await resolveAiRequest({ useShared: true }));
+    for (let i = 0; i < SHARED_KEY_DAILY_LIMIT.FREE + 2; i++) await resolveAiRequest({ useShared: true });
     expect((await resolveAiRequest({ useShared: true })).usingSharedKey).toBe(true);
   });
 
   it("keeps the shared and own-key daily counters apart", async () => {
     signedIn("u1");
     const key = await addKey("u1");
-    for (let i = 0; i < SHARED_KEY_DAILY_LIMIT.FREE; i++) await finishAiRequest({ userId: "u1", usingSharedKey: true });
+    for (let i = 0; i < SHARED_KEY_DAILY_LIMIT.FREE; i++) await recordUsage("u1", true);
     expect((await denied(resolveAiRequest({ useShared: true }))).status).toBe(429);
     expect((await resolveAiRequest({ apiKeyId: key.id })).usingSharedKey).toBe(false); // own key unaffected
-    expect(db.aiUsage.__rows.map((r) => [r.source, r.count])).toEqual([["shared", SHARED_KEY_DAILY_LIMIT.FREE]]);
+    expect(db.aiUsage.__rows.map((r) => [r.source, r.count])).toEqual([
+      ["shared", SHARED_KEY_DAILY_LIMIT.FREE],
+      ["byok", 1], // taken when the own-key request was accepted
+    ]);
   });
 
   it("applies the flat daily guard to own-key use", async () => {
     signedIn("u1");
     const key = await addKey("u1");
-    for (let i = 0; i < BYOK_DAILY_LIMIT; i++) await finishAiRequest({ userId: "u1", usingSharedKey: false });
+    for (let i = 0; i < BYOK_DAILY_LIMIT; i++) await recordUsage("u1", false);
     const err = await denied(resolveAiRequest({ apiKeyId: key.id }));
     expect(err.status).toBe(429);
     expect(err.message).toMatch(/Daily limit reached/);
@@ -162,3 +164,55 @@ describe("resolveAiRequest: limits", () => {
     expect((await resolveAiRequest({ useShared: true })).usingSharedKey).toBe(true);
   });
 });
+
+describe("resolveAiRequest: the allowance can't be dodged", () => {
+  it("parallel requests can't exceed the daily allowance", async () => {
+    signedIn("u1");
+    const results = await Promise.allSettled(Array.from({ length: 10 }, () => resolveAiRequest({ useShared: true })));
+    expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(SHARED_KEY_DAILY_LIMIT.FREE);
+  });
+
+  it("refundAiRequest gives back a slot for a request that cost nothing", async () => {
+    signedIn("u1");
+    const taken = [];
+    for (let i = 0; i < SHARED_KEY_DAILY_LIMIT.FREE; i++) taken.push(await resolveAiRequest({ useShared: true }));
+    await refundAiRequest(taken[0]);
+    expect((await resolveAiRequest({ useShared: true })).usingSharedKey).toBe(true);
+    expect((await denied(resolveAiRequest({ useShared: true }))).status).toBe(429);
+  });
+
+  it("a subscription that is failing payment does not keep the paid allowance", async () => {
+    signedIn("u1");
+    await db.subscription.create({ data: { userId: "u1", tier: "PRO", status: "past_due" } });
+    for (let i = 0; i < SHARED_KEY_DAILY_LIMIT.FREE; i++) await resolveAiRequest({ useShared: true });
+    expect((await denied(resolveAiRequest({ useShared: true }))).status).toBe(429);
+  });
+
+  it("a subscription in good standing does", async () => {
+    signedIn("u1");
+    await db.subscription.create({ data: { userId: "u1", tier: "STARTER", status: "active" } });
+    for (let i = 0; i < SHARED_KEY_DAILY_LIMIT.FREE + 2; i++) await resolveAiRequest({ useShared: true });
+  });
+});
+
+describe("refundIfFree: only failures that cost nothing give the allowance back", () => {
+  it("refunds a network failure but not a bad model output or a dropped connection", async () => {
+    signedIn("u1");
+    const a = await resolveAiRequest({ useShared: true });
+    const b = await resolveAiRequest({ useShared: true });
+    const c = await resolveAiRequest({ useShared: true });
+    expect((await denied(resolveAiRequest({ useShared: true }))).status).toBe(429);
+
+    await refundIfFree(a, new AiOutputError("not json")); // the model ran: stays counted
+    await refundIfFree(b, Object.assign(new Error("aborted"), { name: "AbortError" })); // client left: stays counted
+    expect((await denied(resolveAiRequest({ useShared: true }))).status).toBe(429);
+
+    await refundIfFree(c, new TypeError("fetch failed")); // never reached the model: given back
+    expect((await resolveAiRequest({ useShared: true })).usingSharedKey).toBe(true);
+  });
+
+  it("does nothing when the request was never resolved", async () => {
+    await expect(refundIfFree(undefined, new TypeError("fetch failed"))).resolves.toBeUndefined();
+  });
+});
+

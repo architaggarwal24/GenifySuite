@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { prisma } from "@/lib/prisma";
-import { BYOK_DAILY_LIMIT, SHARED_KEY_DAILY_LIMIT, checkUsage, recordUsage } from "./usage";
+import { BYOK_DAILY_LIMIT, SHARED_KEY_DAILY_LIMIT, checkUsage, recordUsage, releaseUsage, reserveUsage } from "./usage";
 import type { FakePrisma } from "../../../test/fake-prisma";
 
 vi.mock("@/lib/prisma", async () => {
@@ -67,5 +67,49 @@ describe("daily usage caps", () => {
     expect((await checkUsage("u1", true, "FREE")).allowed).toBe(false);
     vi.setSystemTime(new Date("2026-10-01T00:00:01Z"));
     expect((await checkUsage("u1", true, "FREE")).allowed).toBe(true);
+  });
+});
+
+describe("reserveUsage: take the allowance BEFORE the provider is called", () => {
+  const limit = SHARED_KEY_DAILY_LIMIT.FREE;
+
+  it("grants up to the limit, then refuses without letting the counter creep past it", async () => {
+    for (let i = 0; i < limit; i++) expect((await reserveUsage("u1", true, "FREE")).allowed).toBe(true);
+    for (let i = 0; i < 5; i++) expect((await reserveUsage("u1", true, "FREE")).allowed).toBe(false);
+    expect(db.aiUsage.__rows.map((r) => r.count)).toEqual([limit]);
+  });
+
+  it("cannot be raced past the limit by parallel requests", async () => {
+    const results = await Promise.all(Array.from({ length: 25 }, () => reserveUsage("u1", true, "FREE")));
+    expect(results.filter((r) => r.allowed)).toHaveLength(limit);
+    expect(db.aiUsage.__rows.map((r) => r.count)).toEqual([limit]);
+  });
+
+  it("reports what is left", async () => {
+    expect(await reserveUsage("u1", true, "FREE")).toEqual({ allowed: true, remaining: limit - 1, limit });
+  });
+
+  it("keeps shared and own-key counters apart, and users apart", async () => {
+    for (let i = 0; i < limit; i++) await reserveUsage("u1", true, "FREE");
+    expect((await reserveUsage("u1", false, "FREE")).allowed).toBe(true);
+    expect((await reserveUsage("u2", true, "FREE")).allowed).toBe(true);
+  });
+
+  it("applies the flat guard to own-key use", async () => {
+    for (let i = 0; i < BYOK_DAILY_LIMIT; i++) await reserveUsage("u1", false, "PRO");
+    expect((await reserveUsage("u1", false, "PRO")).allowed).toBe(false);
+  });
+});
+
+describe("releaseUsage: give back a reservation that cost nothing", () => {
+  it("frees one slot, and never goes below zero", async () => {
+    await reserveUsage("u1", true, "FREE");
+    await releaseUsage("u1", true);
+    await releaseUsage("u1", true);
+    expect(db.aiUsage.__rows.map((r) => r.count)).toEqual([0]);
+    expect((await checkUsage("u1", true, "FREE")).remaining).toBe(SHARED_KEY_DAILY_LIMIT.FREE);
+  });
+  it("does nothing when there is no row", async () => {
+    await expect(releaseUsage("nobody", true)).resolves.toBeUndefined();
   });
 });

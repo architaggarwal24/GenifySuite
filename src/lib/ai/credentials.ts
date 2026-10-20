@@ -1,8 +1,9 @@
 import { type SubscriptionTier } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { AiRequestDenied } from "@/lib/ai/errors";
-import { checkUsage, recordUsage } from "@/lib/ai/usage";
+import { AiRequestDenied, isRefundableAiError } from "@/lib/ai/errors";
+import { releaseUsage, reserveUsage } from "@/lib/ai/usage";
+import { effectiveTier } from "@/lib/billing-status";
 import { decryptSecret } from "@/lib/crypto";
 import { prisma } from "@/lib/prisma";
 import { AI_RATE_LIMITS, consumeRateLimit } from "@/lib/rate-limit";
@@ -91,9 +92,10 @@ export async function resolveAiRequest(input: ResolveInput): Promise<ResolvedAiR
   }
 
   const subscription = await prisma.subscription.findUnique({ where: { userId } });
-  const tier: SubscriptionTier = subscription?.tier ?? "FREE";
+  const tier: SubscriptionTier = effectiveTier(subscription);
 
-  const usage = await checkUsage(userId, usingSharedKey, tier);
+  // Takes the request from the daily allowance NOW (atomically), before any provider work.
+  const usage = await reserveUsage(userId, usingSharedKey, tier);
   if (!usage.allowed) {
     throw new AiRequestDenied(
       usingSharedKey
@@ -106,7 +108,15 @@ export async function resolveAiRequest(input: ResolveInput): Promise<ResolvedAiR
   return { userId, providerId, model, credentials, usingSharedKey };
 }
 
-/** Records a successful request against the counter for the path it used (shared key vs BYOK). */
-export async function finishAiRequest(resolved: Pick<ResolvedAiRequest, "userId" | "usingSharedKey">): Promise<void> {
-  await recordUsage(resolved.userId, resolved.usingSharedKey);
+/**
+ * Gives back the allowance taken by resolveAiRequest. Call it only for a failure that cost nothing
+ * (see isRefundableAiError); everything else stays counted.
+ */
+export async function refundAiRequest(resolved: Pick<ResolvedAiRequest, "userId" | "usingSharedKey">): Promise<void> {
+  await releaseUsage(resolved.userId, resolved.usingSharedKey);
+}
+
+/** In a route's catch block: give the allowance back if (and only if) the failure cost nothing. */
+export async function refundIfFree(resolved: Pick<ResolvedAiRequest, "userId" | "usingSharedKey"> | undefined, err: unknown): Promise<void> {
+  if (resolved && isRefundableAiError(err)) await refundAiRequest(resolved).catch(() => undefined);
 }

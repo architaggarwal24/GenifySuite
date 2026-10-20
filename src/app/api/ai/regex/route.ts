@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { complete } from "@/lib/ai/complete";
-import { finishAiRequest, resolveAiRequest } from "@/lib/ai/credentials";
+import { refundIfFree, resolveAiRequest, type ResolvedAiRequest } from "@/lib/ai/credentials";
 import { aiErrorResponse } from "@/lib/ai/http";
 
 const SYSTEM_PROMPT = `You write regular expressions from a plain-English description. Respond with
@@ -21,8 +21,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid request" }, { status: 400 });
   }
 
+  let resolved: ResolvedAiRequest | undefined;
   try {
-    const resolved = await resolveAiRequest({
+    resolved = await resolveAiRequest({
       apiKeyId: parsed.data.apiKeyId,
       useShared: parsed.data.useShared,
     });
@@ -35,8 +36,6 @@ export async function POST(request: Request) {
       parsed.data.description
     );
 
-    await finishAiRequest(resolved);
-
     const cleaned = raw.replace(/^```(json)?/i, "").replace(/```$/, "").trim();
     let result: { regex: string; flags: string; explanation: string; example_match: string };
     try {
@@ -47,6 +46,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ result });
   } catch (err) {
+    await refundIfFree(resolved, err);
     return aiErrorResponse(err);
   }
 }

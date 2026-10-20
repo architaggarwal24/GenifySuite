@@ -364,3 +364,12 @@ Reusable pieces (no extra dependencies):
 - **Preview only when signed out:** each `/tools/<slug>` page. `ToolShell` renders the tool as an inert, blurred preview with an unlock card, and opens the login/signup popup (`components/auth-modal.tsx`). `app/tools/layout.tsx` passes it the server-verified session.
 - **Enforced on the server:** every AI route (`/api/ai/*`), `/api/ip-lookup`, history, workflows, account and billing routes return 401 without a session. Dashboard and settings are also redirected by `src/proxy.ts`.
 - Open the popup from anywhere with `openAuthModal({ mode: "login" | "register" })` from `src/lib/auth-modal.ts`.
+
+## Security notes
+
+- **Secrets:** in production the app refuses to sign anyone in if `NEXTAUTH_SECRET` is missing, shorter than 32 characters or still the `.env.example` placeholder (and checks `ENCRYPTION_KEY` the same way when set). Generate both with `openssl rand -base64 32`.
+- **AI provider URLs:** a saved base URL is called by the server, so in production it must be a public `https` address (private/loopback/metadata addresses, credentials, query strings and redirects are refused, and the hostname's DNS is checked). A local Ollama therefore only works in development, or on a self-hosted install with `GENIFY_ALLOW_PRIVATE_AI_HOSTS=true`. See `src/lib/ai/url-safety.ts`.
+- **Client IP:** set `GENIFY_TRUSTED_IP_HEADER` for your host (e.g. `cf-connecting-ip` on Cloudflare), or the per-IP rate limits can't tell clients apart reliably. See `.env.example`.
+- **Daily AI allowance:** a request is taken from the allowance *before* the provider is called, and handed back only when the failure certainly cost nothing (network error, provider 5xx). The agent also caps conversation size (`src/lib/ai/agent-limits.ts`).
+- **Plans:** a paid tier only counts while the Stripe subscription is `active` or `trialing` (`src/lib/billing-status.ts`).
+- **Sign-in throttling:** attempts are counted before the password is checked, so parallel guesses can't outrun the limit; an address that has signed into an account before is exempt from the per-account cap, so strangers can't lock you out of your usual device.

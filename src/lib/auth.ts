@@ -8,7 +8,8 @@ import GoogleProvider from "next-auth/providers/google";
 import { getClientIp } from "@/lib/client-ip";
 import { verifyPassword } from "@/lib/passwords";
 import { prisma } from "@/lib/prisma";
-import { AUTH_RATE_LIMITS, consumeRateLimit, peekRateLimit } from "@/lib/rate-limit";
+import { AUTH_RATE_LIMITS, consumeRateLimit, peekRateLimit, refundRateLimit } from "@/lib/rate-limit";
+import { assertProductionSecrets } from "@/lib/secrets-check";
 import { isSessionStale } from "@/lib/session-validity";
 
 /** The `error` the sign-in form receives when too many recent attempts have failed. */
@@ -23,22 +24,37 @@ function headerValue(headers: HeaderBag, name: string): string | undefined {
 }
 
 /**
- * Email + password sign-in. Failed attempts are throttled three ways (this account from this address, this
- * address across accounts, this account from anywhere); only FAILURES count, so successful logins never use
- * up the allowance. A missing account does the same bcrypt work as a real one, so timing doesn't reveal
- * which emails are registered.
+ * Email + password sign-in. Attempts are throttled three ways (this account from this address, this address
+ * across accounts, this account from anywhere).
+ *
+ * Each attempt is COUNTED FIRST, atomically, and only then checked against the password. (Checking the counter
+ * and counting later would let a burst of parallel guesses all see "no failures yet" and all be tried.) A
+ * successful sign-in gives its count back, so only failures use up the allowance.
+ *
+ * The per-account cap is what stops an attacker rotating addresses - but it also means someone can fill it to
+ * block the real owner. So an address that has signed into this account before is exempt from that one cap:
+ * strangers can't lock you out of the device you normally use, and a stranger can't earn the exemption
+ * without already knowing the password. (A new device of a targeted account can still be held back; password
+ * reset and OAuth sign-in are unaffected.)
+ *
+ * A missing account does the same bcrypt work as a real one, so timing doesn't reveal which emails are registered.
  */
 export async function authorizeCredentials(
   credentials: Partial<Record<"email" | "password", string>> | undefined,
   headers?: HeaderBag
 ) {
+  assertProductionSecrets();
+
   const email = credentials?.email?.toLowerCase().trim();
   const password = credentials?.password;
   if (!email || !password || email.length > 254) return null;
 
   const ip = getClientIp((name) => headerValue(headers, name));
+  const device = ip ? { scope: "login-known", id: `${email}|${ip}`, ...AUTH_RATE_LIMITS.loginKnownDevice } : null;
+  const knownDevice = device ? !(await peekRateLimit(device.scope, device.id, device.limit, device.windowSeconds)).allowed : false;
+
   const buckets = [
-    { scope: "login-email", id: email, ...AUTH_RATE_LIMITS.loginFailedEmail },
+    ...(knownDevice ? [] : [{ scope: "login-email", id: email, ...AUTH_RATE_LIMITS.loginFailedEmail }]),
     ...(ip
       ? [
           { scope: "login-ip", id: ip, ...AUTH_RATE_LIMITS.loginFailedIp },
@@ -47,16 +63,17 @@ export async function authorizeCredentials(
       : []),
   ];
 
-  const checks = await Promise.all(buckets.map((b) => peekRateLimit(b.scope, b.id, b.limit, b.windowSeconds)));
-  if (checks.some((c) => !c.allowed)) throw new Error(LOGIN_RATE_LIMITED);
+  // Count this attempt first; the atomic increment is what makes the limit hold under parallel requests.
+  const counted = await Promise.all(buckets.map((b) => consumeRateLimit(b.scope, b.id, b.limit, b.windowSeconds)));
+  if (counted.some((c) => !c.allowed)) throw new Error(LOGIN_RATE_LIMITED);
 
   const user = await prisma.user.findUnique({ where: { email } });
   const valid = await verifyPassword(password, user?.passwordHash);
+  if (!user || !valid) return null; // stays counted
 
-  if (!user || !valid) {
-    await Promise.all(buckets.map((b) => consumeRateLimit(b.scope, b.id, b.limit, b.windowSeconds)));
-    return null;
-  }
+  // Success: forgive this attempt, and remember the address as a known device for this account.
+  await Promise.all(buckets.map((b) => refundRateLimit(b.scope, b.id, b.windowSeconds)));
+  if (device && !knownDevice) await consumeRateLimit(device.scope, device.id, device.limit, device.windowSeconds);
 
   return { id: user.id, name: user.name, email: user.email, image: user.image };
 }
@@ -69,6 +86,7 @@ export async function authorizeCredentials(
  *  - expose whether the email is verified, always freshly read rather than frozen into the token.
  */
 export async function buildSession({ session, token }: { session: Session; token: JWT }): Promise<Session> {
+  assertProductionSecrets();
   const uid = token.uid;
   if (!uid) return {} as Session;
 

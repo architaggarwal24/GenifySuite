@@ -1,8 +1,10 @@
 import crypto from "crypto";
+import { assertProductionSecrets } from "@/lib/secrets-check";
 
 const ALGORITHM = "aes-256-gcm";
 
 function getKey(): Buffer {
+  assertProductionSecrets();
   const secret = process.env.ENCRYPTION_KEY;
   if (!secret) {
     throw new Error(

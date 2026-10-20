@@ -40,15 +40,48 @@ export interface UsageCheckResult {
 
 /**
  * Checks (without incrementing) whether a request is allowed right now.
- * Call this before doing any provider work, then call recordUsage() only
- * after the request actually succeeds. (Check-then-record isn't atomic, so
- * a burst of parallel requests can overshoot the cap slightly; the per-minute
- * rate limiter bounds how far.)
+ * Read-only (used for display, e.g. the dashboard). To actually take a request
+ * from the allowance, use reserveUsage(), which is atomic.
  */
 export async function checkUsage(userId: string, usingSharedKey: boolean, tier: SubscriptionTier): Promise<UsageCheckResult> {
   const limit = usingSharedKey ? SHARED_KEY_DAILY_LIMIT[tier] : BYOK_DAILY_LIMIT;
   const used = await getTodayCount(userId, sourceOf(usingSharedKey));
   return { allowed: used < limit, remaining: Math.max(0, limit - used), limit };
+}
+
+/**
+ * Atomically TAKES one request from today's allowance, before any provider work starts. Counting up front
+ * (and refunding only failures that cost nothing - see isRefundableAiError) closes two holes in
+ * check-then-record-on-success: parallel requests can't all slip past the check, and dropping the
+ * connection mid-request can't dodge the count.
+ */
+export async function reserveUsage(userId: string, usingSharedKey: boolean, tier: SubscriptionTier): Promise<UsageCheckResult> {
+  const limit = usingSharedKey ? SHARED_KEY_DAILY_LIMIT[tier] : BYOK_DAILY_LIMIT;
+  const source = sourceOf(usingSharedKey);
+
+  // Fast path: already exhausted, so don't touch the counter at all.
+  if ((await getTodayCount(userId, source)) >= limit) return { allowed: false, remaining: 0, limit };
+
+  const date = todayUtc();
+  const row = await prisma.aiUsage.upsert({
+    where: { userId_date_source: { userId, date, source } },
+    create: { userId, date, source, count: 1 },
+    update: { count: { increment: 1 } },
+    select: { count: true },
+  });
+  if (row.count > limit) {
+    await releaseUsage(userId, usingSharedKey); // we raced others for the last slots and lost; undo our increment
+    return { allowed: false, remaining: 0, limit };
+  }
+  return { allowed: true, remaining: limit - row.count, limit };
+}
+
+/** Gives one reserved request back (never below zero). */
+export async function releaseUsage(userId: string, usingSharedKey: boolean): Promise<void> {
+  await prisma.aiUsage.updateMany({
+    where: { userId, date: todayUtc(), source: sourceOf(usingSharedKey), count: { gt: 0 } },
+    data: { count: { decrement: 1 } },
+  });
 }
 
 export async function recordUsage(userId: string, usingSharedKey: boolean): Promise<void> {

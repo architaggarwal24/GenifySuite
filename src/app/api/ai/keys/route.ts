@@ -7,6 +7,7 @@ import { authOptions } from "@/lib/auth";
 import { encryptSecret, maskSecret } from "@/lib/crypto";
 import { prisma } from "@/lib/prisma";
 import { PROVIDERS } from "@/lib/ai/registry";
+import { checkProviderBaseUrl } from "@/lib/ai/url-safety";
 
 const createSchema = z.object({
   provider: z.string().min(1),
@@ -61,12 +62,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: `${meta.label} requires a base URL.` }, { status: 400 });
   }
 
+  // The server will call this address on the user's behalf, so it has to pass the same checks as at request time.
+  let baseUrl: string | null = null;
+  if (parsed.data.baseUrl) {
+    const checked = checkProviderBaseUrl(parsed.data.baseUrl);
+    if (!checked.ok) return NextResponse.json({ error: checked.reason }, { status: 400 });
+    baseUrl = checked.url;
+  }
+
   const key = await prisma.apiKey.create({
     data: {
       userId: session.user.id,
       provider: providerId.toUpperCase() as AiProvider,
       label: parsed.data.label,
-      baseUrl: parsed.data.baseUrl || null,
+      baseUrl,
       secret: parsed.data.apiKey ? encryptSecret(parsed.data.apiKey) : null,
       defaultModel: parsed.data.defaultModel,
     },

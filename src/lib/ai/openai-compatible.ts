@@ -10,6 +10,7 @@ import {
   type ToolDefinition,
 } from "@/lib/ai/types";
 import { readSse } from "@/lib/ai/sse";
+import { resolveProviderUrl } from "@/lib/ai/url-safety";
 
 interface OpenAiToolCall {
   id: string;
@@ -167,13 +168,16 @@ export function createOpenAiCompatibleAdapter(defaultBaseUrl: string): AIProvide
       if (!baseUrl) {
         throw new AiProviderError("This provider needs a base URL configured.");
       }
+      // The base URL can be user-supplied, so it is validated (and its DNS checked) before every request.
+      const url = await resolveProviderUrl(baseUrl, "/chat/completions");
 
       const streaming = Boolean(options.onText);
       const headers: Record<string, string> = { "content-type": "application/json" };
       if (credentials.apiKey) headers.authorization = `Bearer ${credentials.apiKey}`;
 
-      const res = await fetch(`${baseUrl}/chat/completions`, {
+      const res = await fetch(url, {
         method: "POST",
+        redirect: "error", // a public host must not be able to bounce this request to an internal one
         headers,
         signal: options.signal,
         body: JSON.stringify({

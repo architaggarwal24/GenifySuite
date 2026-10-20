@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { getPlan } from "@/lib/billing";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { effectiveTier } from "@/lib/billing-status";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,7 @@ export default async function BillingSettingsPage() {
   if (!session?.user?.id) redirect("/login?callbackUrl=/settings/billing");
 
   const subscription = await prisma.subscription.findUnique({ where: { userId: session.user.id } });
-  const plan = getPlan(subscription?.tier ?? "FREE");
+  const plan = getPlan(effectiveTier(subscription));
 
   return (
     <div className="mx-auto max-w-xl px-5 py-14">

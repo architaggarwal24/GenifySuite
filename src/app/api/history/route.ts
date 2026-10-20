@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth";
+import { checkHistoryWrite } from "@/lib/history-limits";
 import { prisma } from "@/lib/prisma";
 
 const createSchema = z.object({
@@ -35,6 +36,14 @@ export async function POST(request: Request) {
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+  }
+
+  const allowed = await checkHistoryWrite(session.user.id, parsed.data.payload);
+  if (!allowed.ok) {
+    return NextResponse.json(
+      { error: allowed.error },
+      { status: allowed.status, ...(allowed.retryAfterSeconds ? { headers: { "Retry-After": String(allowed.retryAfterSeconds) } } : {}) }
+    );
   }
 
   const item = await prisma.historyItem.create({

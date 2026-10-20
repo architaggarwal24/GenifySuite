@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
+import { RESOURCE_RATE_LIMITS, consumeAll } from "@/lib/rate-limit";
 
 const IP_V4_REGEX = /^(\d{1,3}\.){3}\d{1,3}$/;
 const IP_V6_REGEX = /^[0-9a-fA-F:]+$/;
@@ -17,6 +18,20 @@ export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Sign in to use the IP finder." }, { status: 401 });
+  }
+
+  // The upstream service has a small free allowance shared by the whole server, so cap each user and the app
+  // overall. The per-user check goes FIRST and the shared one only counts requests that passed it - otherwise
+  // one person spamming (and being refused) would use up the shared allowance and block everybody.
+  const { ipLookupUser, ipLookupAll } = RESOURCE_RATE_LIMITS;
+  const limited =
+    (await consumeAll([{ scope: "ip-lookup-user", id: session.user.id, ...ipLookupUser }])) ??
+    (await consumeAll([{ scope: "ip-lookup-all", id: "all", ...ipLookupAll }]));
+  if (limited) {
+    return NextResponse.json(
+      { error: "Too many lookups right now. Try again in a minute." },
+      { status: 429, headers: { "Retry-After": String(limited.retryAfterSeconds) } }
+    );
   }
 
   const { searchParams } = new URL(request.url);

@@ -1,27 +1,61 @@
-# GenifySuite 2.0
+# GenifySuite
 
-A rebuild of a learning-project HTML/CSS/JS toolkit into a full-stack Next.js app: card
-validation and dummy test-card generation, fake test data, and dev utilities (password, UUID,
-QR, JSON, color, IP lookup), with accounts and per-tool save-to-history.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+![Next.js](https://img.shields.io/badge/Next.js-16-black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
+![Node](https://img.shields.io/badge/node-%E2%89%A520.9-green)
 
-## Stack
+A full-stack developer toolkit built with Next.js: test-card validation and generation, fake test data, everyday
+dev utilities (passwords, UUIDs, QR codes, JSON, colors, IP lookup), and a set of AI tools including a real
+tool-calling agent. Includes accounts, per-tool save-to-history, bring-your-own-key AI, and optional Stripe billing.
 
-- **Next.js 16** (App Router, TypeScript, Turbopack) - pinned exactly; needs Node 20.9 or newer
-- **Prisma + PostgreSQL** for the database
-- **Auth.js (NextAuth)** — email/password (credentials) and optional Google/GitHub OAuth
-- **Tailwind CSS** with a custom design system (see `tailwind.config.ts`)
+GenifySuite 2.0 is a rebuild of an earlier HTML/CSS/JS learning project.
 
-## What changed from v1
+## Contents
 
-The original project had a second card-number generator (`advance.html`) that accepted an
-arbitrary bank identification number (BIN) and produced full card number + CVV + expiry + a
-fake balance in a pipe-delimited format — the same shape as "fullz" checker-tool output used
-for card fraud, rather than a checkout-form testing utility. That tool was intentionally not
-carried forward. The `card-generator` tool here only generates Luhn-valid numbers from the
-small set of generic prefixes card networks publish for their own test-mode docs (the same
-category as Stripe's `4242 4242 4242 4242`), with no BIN input and no balance field.
+- [Tools](#tools)
+- [Tech stack](#tech-stack)
+- [Quick start](#quick-start)
+- [Environment variables](#environment-variables)
+- [Scripts](#scripts)
+- [AI features](#ai-features)
+- [Dashboard](#dashboard)
+- [Accounts, email and security](#accounts-email-and-security)
+- [Access model](#access-model)
+- [Tests](#tests)
+- [Deployment](#deployment)
+- [Project structure](#project-structure)
+- [Extending it](#extending-it)
+- [Design system notes](#design-system-notes)
+- [A note on the card tools](#a-note-on-the-card-tools)
+- [License](#license)
 
-## Local setup
+## Tools
+
+| Category | Tools |
+|---|---|
+| **AI tools** | AI agent, Regex generator, Commit message writer, Schema to fake data, API mock generator, Cron builder & explainer, Error explainer |
+| **Card tools** | Card validator (Luhn + network detection), Test card generator |
+| **Data & text** | Profile generator, Lorem ipsum generator |
+| **Dev utilities** | JSON formatter, Password generator, UUID generator, Color palette generator, QR code generator |
+| **Network** | IP address finder |
+
+Every tool has its own page under `/tools/<slug>`, an animated result reveal, and a **Cmd+K / Ctrl+K** command
+palette (also reachable from the navbar) that jumps to any tool or action. Signed-in users can save results to
+their history.
+
+## Tech stack
+
+- **Next.js 16** (App Router, TypeScript, Turbopack), pinned exactly. Requires **Node 20.9 or newer**
+- **React 19**
+- **Prisma 5 + PostgreSQL**
+- **Auth.js (NextAuth v4)**: email/password, plus optional Google and GitHub OAuth
+- **Tailwind CSS 3** with a custom design system
+- **Stripe** (optional billing) and **Resend** (verification and password-reset email)
+- **Vitest** for tests, with no database, network or API keys needed
+- An alternate **Cloudflare Workers** build via vinext (see [Deployment](#deployment))
+
+## Quick start
 
 1. **Install dependencies**
 
@@ -29,28 +63,30 @@ category as Stripe's `4242 4242 4242 4242`), with no BIN input and no balance fi
    npm install
    ```
 
-2. **Get a Postgres database.** Any of these work — pick one and copy its connection string:
-   - [Supabase](https://supabase.com) — see the step-by-step below
+2. **Get a PostgreSQL database** and copy its connection string. Any of these work:
+   - [Supabase](#setting-up-supabase)
    - [Neon](https://neon.tech) (serverless Postgres, generous free tier)
    - [Vercel Postgres](https://vercel.com/storage/postgres)
-   - A local Postgres instance (`postgresql://postgres:postgres@localhost:5432/genifysuite`)
+   - A local Postgres, for example `postgresql://postgres:postgres@localhost:5432/genifysuite`
 
-3. **Copy the env file and fill it in**
+3. **Create your env file**
 
    ```bash
    cp .env.example .env
    ```
 
-   - `DATABASE_URL` — the connection string from step 2
-   - `NEXTAUTH_SECRET` — generate with `openssl rand -base64 32`
-   - `NEXTAUTH_URL` — `http://localhost:3000` locally
-   - OAuth vars are optional; leave them blank to use email/password only (see below)
+   At minimum set `DATABASE_URL`, `DIRECT_URL`, `NEXTAUTH_SECRET` (generate with `openssl rand -base64 32`) and
+   `NEXTAUTH_URL` (`http://localhost:3000` locally). For a non-Supabase database you can point both URLs at the
+   same string. To use the AI tools, also set `ENCRYPTION_KEY` (same generator). Everything else is optional; see
+   [Environment variables](#environment-variables).
 
-4. **Push the schema to your database**
+4. **Create the tables**
 
    ```bash
    npm run db:push
    ```
+
+   Run this again after pulling changes that touch `prisma/schema.prisma`.
 
 5. **Run it**
 
@@ -58,229 +94,218 @@ category as Stripe's `4242 4242 4242 4242`), with no BIN input and no balance fi
    npm run dev
    ```
 
-   Visit `http://localhost:3000`.
+   Open <http://localhost:3000>. With no email provider configured, verification and password-reset emails
+   (with their links) are printed in your terminal during development.
 
-## Adding Google / GitHub sign-in (optional)
+### Setting up Supabase
 
-Email/password works with zero extra setup. To add OAuth:
+GenifySuite uses Supabase only as a plain Postgres host through Prisma. No Supabase Auth, Storage or Edge
+Functions are needed.
 
-**Google** — [Google Cloud Console](https://console.cloud.google.com/apis/credentials) →
-Create OAuth client ID → Web application → Authorized redirect URI:
-`http://localhost:3000/api/auth/callback/google` (and your production URL once deployed).
-Copy the client ID/secret into `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`.
+1. Create a project at [supabase.com](https://supabase.com) and set a database password (you will need it below).
+2. Go to **Project Settings → Database → Connection string**.
+3. Use the **pooler** strings, not the plain direct connection (that one is IPv6-only and unreachable from most
+   networks):
+   - **Transaction pooler** (port `6543`) is your `DATABASE_URL`. Append `?pgbouncer=true`.
+   - **Session pooler** (port `5432`) is your `DIRECT_URL`.
 
-**GitHub** — [GitHub Developer Settings](https://github.com/settings/developers) → New OAuth
-App → Authorization callback URL: `http://localhost:3000/api/auth/callback/github`. Copy the
-client ID/secret into `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET`.
+   Replace `[YOUR-PASSWORD]` in both with your database password.
+4. Run `npm run db:push`, start the app, and register an account to confirm rows appear under
+   **Table Editor → User**.
 
-Then set `NEXT_PUBLIC_GOOGLE_OAUTH_ENABLED=true` and/or `NEXT_PUBLIC_GITHUB_OAUTH_ENABLED=true`
-so the sign-in page shows the matching button.
+### Google and GitHub sign-in (optional)
 
-## Setting up Supabase
+Email/password works with no extra setup. To add OAuth:
 
-1. Go to [supabase.com](https://supabase.com), sign in, and click **New project**. Pick an
-   organization, name it (e.g. `genifysuite`), set a database password (save it — you'll need
-   it in the connection strings below), pick a region close to you, and create it. It takes
-   about a minute to provision.
-2. Once it's ready, go to **Project Settings** (gear icon) → **Database**.
-3. Under **Connection string**, switch the mode dropdown between these two — don't use the
-   plain **URI** / direct connection option, it's IPv6-only and unreachable from most networks:
-   - **Transaction pooler** (port `6543`) → this is your `DATABASE_URL`.
-   - **Session pooler** (port `5432`) → this is your `DIRECT_URL`.
-   Both host strings look like `aws-0-<region>.pooler.supabase.com`. Both use the same password
-   you set in step 1 — replace `[YOUR-PASSWORD]` in the copied string with it.
-4. Paste both into your `.env` file (see `.env.example` for the exact shape — note the pooled
-   one needs `?pgbouncer=true` on the end).
-5. Push the schema: `npm run db:push`. This creates all the tables (users, sessions, history)
-   in your Supabase project — you'll see them appear under **Table Editor** in the Supabase
-   dashboard.
-6. Run `npm run dev` and create an account through the app's `/register` page to confirm it's
-   writing to the database (check **Table Editor → User** in Supabase).
+- **Google:** [Cloud Console](https://console.cloud.google.com/apis/credentials) → Create OAuth client ID → Web
+  application → redirect URI `http://localhost:3000/api/auth/callback/google` (plus your production URL).
+- **GitHub:** [Developer Settings](https://github.com/settings/developers) → New OAuth App → callback URL
+  `http://localhost:3000/api/auth/callback/github`.
 
-That's it — no Supabase Auth, Storage, or Edge Functions needed here, this project only uses
-Supabase as a plain Postgres host via Prisma.
+Put the client ID and secret in the matching `*_CLIENT_ID` / `*_CLIENT_SECRET` variables, then set
+`NEXT_PUBLIC_GOOGLE_OAUTH_ENABLED=true` and/or `NEXT_PUBLIC_GITHUB_OAUTH_ENABLED=true` so the sign-in page shows
+the buttons.
 
-## UI polish
+## Environment variables
 
-Per-tool icons (`src/components/tool-icon.tsx`, backed by `lucide-react`), a result-reveal
-animation on every generated output (`src/components/result-reveal.tsx`), skeleton loading
-states for network calls, and a **Cmd+K / Ctrl+K command palette** (`src/components/
-command-palette.tsx`, via `cmdk`) that jumps to any tool or action - also reachable via the
-"Search tools" button in the navbar for people without a keyboard shortcut habit.
+| Variable | Required | Purpose |
+|---|---|---|
+| `DATABASE_URL` | yes | Pooled Postgres connection used at runtime |
+| `DIRECT_URL` | yes | Direct connection used by `prisma db push` / `migrate` |
+| `NEXTAUTH_SECRET` | yes | Session signing secret. In production it must be 32+ characters and not the placeholder |
+| `NEXTAUTH_URL` | yes | Your public address. Emailed links are built from this, never from the request's `Host` header. Must be your real `https://` URL in production |
+| `RESEND_API_KEY`, `EMAIL_FROM` | production | Email delivery. Verify a sending domain in [Resend](https://resend.com) first. Without them, dev prints emails to the terminal and production sends nothing |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | no | OAuth providers |
+| `NEXT_PUBLIC_GOOGLE_OAUTH_ENABLED`, `NEXT_PUBLIC_GITHUB_OAUTH_ENABLED` | no | Show the matching sign-in buttons |
+| `ENCRYPTION_KEY` | for AI tools | AES-256-GCM key that encrypts saved provider API keys. Generate with `openssl rand -base64 32` |
+| `ANTHROPIC_API_KEY` | no | *Your* key, enabling the optional "use GenifySuite's key" path |
+| `GENIFY_SHARED_MODEL` | no | Model for the shared-key path (default `claude-haiku-4-5`) |
+| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_STARTER`, `STRIPE_PRICE_PRO` | no | Paid tiers for the shared key |
+| `GENIFY_TRUSTED_IP_HEADER` | recommended in production | Header your host sets with the real client IP (for example `cf-connecting-ip` on Cloudflare). Leave blank on Vercel |
+| `GENIFY_TRUSTED_PROXY_HOPS` | no | When the header is `x-forwarded-for`: how many of your proxies append to it (default 1) |
+| `GENIFY_ALLOW_PRIVATE_AI_HOSTS` | no | `true` only on a self-hosted install that really runs Ollama or another model server on localhost or a private network |
 
-The agent's replies render as Markdown once complete, and animate in progressively rather than
-appearing all at once (`src/hooks/use-typewriter.ts`) - deliberately a client-side reveal of the
-already-complete response, not literal token-by-token network streaming. True streaming through
-a multi-provider, tool-calling loop would mean handling Anthropic's and OpenAI's very different
-incremental tool-call-argument formats, which isn't something to bolt on without a live key to
-verify against - worth revisiting if it matters enough to you to prioritize.
+## Scripts
 
-## AI features (BYOK, agent, billing)
+| Command | What it does |
+|---|---|
+| `npm run dev` | Start the dev server at `http://localhost:3000` |
+| `npm run build` / `npm start` | Production build (runs `prisma generate` first) and server |
+| `npm test` / `npm run test:watch` | Run the Vitest suite once / in watch mode |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm run check` | Typecheck and tests |
+| `npm run db:push` | Push the Prisma schema to your database |
+| `npm run db:migrate` | `prisma migrate dev` |
+| `npm run db:studio` | Open Prisma Studio |
+| `npm run dev:vinext` / `build:vinext` / `start:vinext` | Cloudflare (vinext) build: dev on port 3001, build, preview |
+| `npm run deploy:vinext` | Deploy the vinext build to Cloudflare Workers |
+| `npm run deploy:response-store` | Deploy the companion response-store worker |
 
-Three new tools under "AI tools": an **agent** that calls your other tools via natural
-language, a **regex generator**, and a **commit message writer**. All three need an AI
-provider — configured per-user, not per-deployment, via **Settings → AI provider keys**
-(`/settings/ai`).
+## AI features
 
-**Bring your own key (BYOK).** Anthropic, OpenAI, a local or self-hosted Ollama, NVIDIA NIM, or
-any other OpenAI-compatible endpoint (Groq, Together, LM Studio, etc. — pick "Custom" and point
-it at the base URL). Keys are encrypted (`AES-256-GCM`) before they're written to the database
-using `ENCRYPTION_KEY` (generate one the same way as `NEXTAUTH_SECRET`: `openssl rand -base64
-32`) and are never sent back to the browser after saving. BYOK usage is capped at 200
-requests/day/user as a flat abuse guard (it's still your server and database doing the work,
-even on someone else's key) — tune `BYOK_DAILY_LIMIT` in `src/lib/ai/usage.ts`.
+The AI tools run on an AI provider that is configured **per user**, in **Settings → AI provider keys**
+(`/settings/ai`), not per deployment. Until a user adds a key, the tools simply say so.
 
-**"I don't have a key, use yours."** Optional — only appears if you set `ANTHROPIC_API_KEY` in
-`.env` (this is *your* key, the operator's, separate from anything a user saves in Settings).
-When set, signed-in users can use it directly with a small free trial (3 requests/day) or
-subscribe to a paid tier for a higher daily cap:
+### Bring your own key (BYOK)
 
-1. Create two Products/Prices in your [Stripe Dashboard](https://dashboard.stripe.com/products)
-   (Starter, Pro — whatever price you want), copy their Price IDs into `STRIPE_PRICE_STARTER`
-   / `STRIPE_PRICE_PRO`.
-2. Set `STRIPE_SECRET_KEY` from Stripe's API keys page.
-3. Add a webhook endpoint in Stripe pointing at `https://yourdomain.com/api/billing/webhook`,
-   listening for `customer.subscription.created/updated/deleted`, and copy its signing secret
-   into `STRIPE_WEBHOOK_SECRET`.
-4. Tier daily limits live in `SHARED_KEY_DAILY_LIMIT` in `src/lib/ai/usage.ts` — the numbers
-   there are placeholders, tune them against what each tier's price actually covers in tokens.
+Supported providers: **Anthropic**, **OpenAI**, **Ollama**, **NVIDIA NIM**, and any other OpenAI-compatible
+endpoint (Groq, Together, LM Studio and so on: choose *Custom* and give the base URL). Keys are encrypted with
+`ENCRYPTION_KEY` before they are stored and are never sent back to the browser. BYOK usage has a flat cap of
+200 requests per user per day as an abuse guard (`BYOK_DAILY_LIMIT` in `src/lib/ai/usage.ts`).
 
-None of this is required to use the app — BYOK works with zero billing setup, and the AI tools
-simply show "add a key in Settings" until a user does.
+### "Use GenifySuite's key" (optional)
 
-**The agent** (`/tools/ai-agent`) is real tool-calling, not a scripted demo: it can call
-`generate_password`, `generate_uuids`, `generate_fake_profiles`, `generate_lorem_ipsum`, and
-`generate_color_palette` (defined in `src/lib/ai/tools.ts`) against the same functions your
-other tool pages use. To add a new callable tool, add an entry there with a JSON Schema for its
-arguments and an `execute` function — no other wiring needed, both the Anthropic and
-OpenAI-compatible adapters pick it up automatically.
+Only offered if you set `ANTHROPIC_API_KEY`. Signed-in users with a verified email get a small free allowance and
+can subscribe for more:
 
-After pulling this update, run `npm run db:push` again — it adds the `ApiKey`, `Subscription`,
-and `AiUsage` tables.
+| Tier | Shared-key requests per day |
+|---|---|
+| Free | 3 |
+| Starter | 50 |
+| Pro | 300 |
 
-## More AI tools, AI assist, and a smarter agent
+The numbers live in `SHARED_KEY_DAILY_LIMIT` in `src/lib/ai/usage.ts`; they are placeholders, so tune them to what
+each tier's price actually covers. To enable paid tiers:
 
-**Seven AI tools** now live under "AI tools": the agent, regex generator, commit message writer,
-and four newer ones - **Schema to fake data** (`/tools/fixtures`), **API mock generator**
-(`/tools/api-mock`), **Cron builder & explainer** (`/tools/cron`) and **Error explainer**
-(`/tools/error-explainer`). All of the newer single-shot features run through one endpoint,
-`POST /api/ai/run`, driven by the registry in `src/lib/ai/features.ts` - adding another is one
-entry there (a zod input schema, a prompt, a parser), with no new route.
+1. Create two Products/Prices in the [Stripe Dashboard](https://dashboard.stripe.com/products) and put their Price
+   IDs in `STRIPE_PRICE_STARTER` and `STRIPE_PRICE_PRO`.
+2. Set `STRIPE_SECRET_KEY`.
+3. Add a webhook endpoint at `https://yourdomain.com/api/billing/webhook` for
+   `customer.subscription.created`, `customer.subscription.updated` and `customer.subscription.deleted`, and put
+   its signing secret in `STRIPE_WEBHOOK_SECRET`.
 
-**AI assist on existing tools** (opt-in, signed-in, uses your chosen key): the JSON formatter can
-explain JSON or convert it to TypeScript / Zod; the profile generator takes a plain-English
-description; the color palette takes a "vibe". The AI only *steers* the palette (base color +
-harmony) - the palette itself is still produced by the deterministic tool.
+A paid tier only counts while the Stripe subscription is `active` or `trialing`. None of this is needed to use
+the app: BYOK works with no billing setup.
 
-**Cron is verified, not trusted.** `src/lib/cron.ts` is a small dependency-free cron parser and
-next-run calculator. Whatever expression the model returns is parsed and its next runs are
-computed locally, so a wrong answer shows up as a wrong-looking preview (or a validation error)
-instead of silently passing. The agent is instructed to call the same check before presenting any
-cron expression.
+### The agent
 
-**Agent additions.** New agent tools: test card numbers, JSON formatting, cron verification, and
-`list_saved_history` (labels only - saved values are never exposed to the model). Pure-LLM
-features like fixtures, mocks and error explanations are deliberately *not* wrapped as agent
-tools: the agent is already an LLM, so a nested model call would just double the cost for the same
-answer - it handles those in conversation directly.
+`/tools/ai-agent` is real tool-calling, not a scripted demo. It can call these tools, which run the same
+functions as the standalone tool pages: `generate_password`, `generate_uuids`, `generate_time_ordered_ids`,
+`generate_fake_profiles`, `generate_lorem_ipsum`, `generate_color_palette`, `generate_test_cards`, `format_json`,
+`cron_next_runs` and `list_saved_history` (labels only; saved values are never exposed to the model).
 
-**Saved workflows.** Save any agent prompt with a name, then re-run it in one click from the agent
-page (up to 30 per user). This adds a `Workflow` table - **run `npm run db:push` again**.
+- **Streaming:** replies stream token by token. Both provider adapters parse Server-Sent Events
+  (`src/lib/ai/sse.ts`) and reassemble the differently fragmented tool-call arguments of Anthropic and
+  OpenAI-compatible APIs. The route streams newline-delimited JSON to the browser, so the client does not need
+  to know which provider answered. Auth, key lookup, rate limit and daily cap are all checked *before* streaming
+  starts, so those failures are ordinary HTTP errors (401, 429, ...). A **Stop** button aborts the request and
+  stops paying for tokens nobody is reading.
+- **Saved workflows:** save any agent prompt with a name and re-run it in one click (up to 30 per user). Export all
+  workflows to a `.json` file, or import someone else's; import respects the same cap.
+- **Cron is verified, not trusted:** `src/lib/cron.ts` is a small dependency-free cron parser and next-run
+  calculator. Whatever expression the model returns is parsed and its next runs computed locally, so a wrong
+  answer shows up as a wrong-looking preview or a validation error. The chat renders the same next-run list the
+  dedicated cron tool shows.
+- Pure-LLM features (fixtures, mocks, error explanations) are deliberately *not* wrapped as agent tools: the agent
+  is already an LLM, so a nested call would double the cost for the same answer.
 
-**Ask your history.** The dashboard has a natural-language search over your saved items ("the QR
-code I made for the wifi"). Only tool names, dates and short labels are sent to your AI provider;
-saved payloads are not.
+### Single-shot AI tools
 
-**Privacy note:** anything you paste into an AI tool (stack traces, schemas, JSON) is sent to
-whichever provider you selected. The error explainer says so on the page - strip secrets first.
+The regex generator, commit message writer, schema-to-fake-data, API mock generator, cron tool and error
+explainer all go through one endpoint, `POST /api/ai/run`, driven by the registry in `src/lib/ai/features.ts`.
 
-## Rate limiting, real streaming, and workflow import/export
+### AI assist on existing tools
 
-**Per-minute rate limiting.** Every AI request (agent, and every `/api/ai/run` feature) now
-passes through a database-backed fixed-window limiter (`src/lib/rate-limit.ts`) before anything
-else happens - 6/minute on the shared key, 20/minute on BYOK. It's DB-backed rather than
-in-memory because on Vercel your app runs across multiple instances, so an in-memory counter
-would let someone multiply their limit by however many instances happen to be warm. This adds a
-`RateLimit` table - **run `npm run db:push` again.**
+Opt-in and signed-in, using your chosen key: the JSON formatter can explain JSON or convert it to TypeScript or
+Zod; the profile generator takes a plain-English description; the color palette takes a "vibe". For palettes the
+AI only steers the base color and harmony: the palette itself still comes from the deterministic tool. On the
+dashboard, **Ask your history** searches your saved items in plain English; only tool names, dates and short labels
+are sent to your provider, never the saved payloads.
 
-**Real token streaming.** The agent's replies now stream token-by-token from the provider,
-properly this time - both provider adapters parse Server-Sent Events (`src/lib/ai/sse.ts`) and
-reassemble fragmented tool-call arguments (Anthropic and OpenAI-compatible APIs each fragment
-these differently). This replaced the earlier client-side "typewriter" simulation entirely. The
-route streams newline-delimited JSON events over a plain `Response` stream
-(`src/lib/ai/ndjson-response.ts`) rather than the provider's raw SSE, so the client doesn't need
-to know which provider produced it. Auth, key lookup, the rate limit and the daily cap are all
-checked *before* streaming starts, so those still come back as proper HTTP errors (401/429/...)
-instead of failing silently mid-stream. There's a **Stop** button that aborts the fetch, which
-propagates through to stop paying the provider for tokens no one's reading.
+### Rate limiting
 
-I tested this against fake SSE servers for both provider formats that deliberately mangle chunk
-boundaries mid-line and mid-multibyte-character (the way a real TCP stream does), covering: text
-reassembly, parallel tool calls whose id/name/arguments arrive as separate fragments, event
-ordering through the agent's tool-call loop, and aborting mid-run. One real bug surfaced and got
-fixed this way: both adapters only parsed SSE when *we'd* asked for it, which breaks against a
-server that streams regardless of the request flag (a real risk for the Ollama/Custom BYOK
-paths) - they now key off the response's actual `content-type` instead.
+Every AI request passes a database-backed fixed-window limiter (`src/lib/rate-limit.ts`) first: **6 per minute**
+on the shared key and **20 per minute** on BYOK. It is database-backed rather than in-memory because on serverless
+hosts your app runs across many instances, and an in-memory counter would let someone multiply their limit by the
+number of warm instances. A request is taken from the daily allowance *before* the provider is called and handed
+back only when the failure certainly cost nothing (a network error or provider 5xx). The agent also caps
+conversation size (`src/lib/ai/agent-limits.ts`).
 
-**Cron runs, visually, in the agent chat.** When the agent calls `cron_next_runs`, the chat shows
-the same verified-locally next-run list the dedicated cron tool shows, instead of a one-line text
-summary.
+### Privacy
 
-**Workflow export/import.** Export all your saved workflows as a `.json` file, or import someone
-else's - both live next to the workflow list on the agent page. Import respects the same
-30-per-user cap and skips anything over it rather than failing the whole batch.
+Anything pasted into an AI tool (stack traces, schemas, JSON) is sent to whichever provider the user selected.
+The error explainer says so on the page. Strip secrets first.
 
 ## Dashboard
 
-The dashboard is now an actual overview, not just a history list: quick links to the agent,
-AI settings, billing and the tools index; stat cards (items saved, today's shared-key and BYOK
-usage against your daily caps, keys/workflows count); a 14-day activity chart; and a most-used-
-tools breakdown. All plain CSS, no charting library.
-
-The 14-day window is built from UTC calendar-day boundaries rather than a rolling "now minus
-14×24h" - which sounds equivalent but isn't: the two only agree when "now" happens to be exactly
-midnight UTC. Any other time of day, a rolling window's cutoff falls partway through a calendar
-day, so the oldest day you fetch from the database doesn't line up with the oldest bucket the
-chart draws, and that day's rows get silently dropped. I actually hit this while building it -
-caught it with a script before it shipped, checked it across a plain day, exact midnight, a
-month boundary, a leap day, and a year boundary. Now the query cutoff and the oldest bucket are
-mathematically the same instant, always.
+An overview rather than just a history list: quick links to the agent, AI settings, billing and the tools index;
+stat cards (items saved, today's shared-key and BYOK usage against your caps, keys and workflows); a 14-day
+activity chart; and a most-used-tools breakdown. It is plain CSS with no charting library. The 14-day window is
+built from UTC calendar-day boundaries, not a rolling "now minus 14 x 24 hours", so the oldest day the database
+returns always lines up exactly with the oldest bucket the chart draws.
 
 ## Accounts, email and security
 
-**Email verification and password reset** work out of the box locally (the email is printed in your
-terminal, link included). For production, create a free [Resend](https://resend.com) account, verify a
-domain, and set `RESEND_API_KEY` and `EMAIL_FROM` (see `.env.example`). Set `NEXTAUTH_URL` to your real
-https address: emailed links are built from it, never from the incoming request's `Host` header (which
-would let an attacker trigger a reset email that links to their own site).
+**Email verification and password reset** work out of the box locally (the email and its link print in your
+terminal). In production, create a [Resend](https://resend.com) account, verify a domain, and set
+`RESEND_API_KEY` and `EMAIL_FROM`.
 
-What the account system does:
-
-- **Sign-in throttling** that counts only *failed* attempts, three ways: this account from this address
-  (8 / 15 min), one address across many accounts (40), and one account from anywhere (40). Keying on
-  email + address together means a stranger hammering your email can't lock you out from your own
-  device. Successful sign-ins never use up the allowance.
-- **No account enumeration:** "forgot password" answers identically, in the same time (the email is
-  sent after the response), whether or not the address has an account, and a missing account still does a
-  full bcrypt comparison at sign-in so timing doesn't give it away.
-- **One-time, hashed tokens.** Only a SHA-256 of each link's token is stored. Verification links last 24
-  hours, reset links 1 hour; each works once; a reset link can't be used as a verification link or vice
-  versa; and a too-weak new password is rejected *before* the link is consumed.
-- **Sessions can be revoked.** Changing or resetting a password, or "Sign out everywhere", sets
-  `User.sessionsValidAfter`; every session read compares against it, so stolen cookies die immediately.
+- **Sign-in throttling** counts only *failed* attempts, three ways: this account from this address (8 per 15
+  minutes), one address across many accounts (40), and one account from anywhere (40). Keying on email plus
+  address means a stranger hammering your email cannot lock you out of your own device, and successful sign-ins
+  never use up the allowance. Attempts are counted before the password is checked, so parallel guesses cannot
+  outrun the limit.
+- **No account enumeration:** "forgot password" answers identically, and in the same time (the email is sent after
+  the response), whether or not the address has an account. A missing account still does a full bcrypt comparison
+  at sign-in so timing does not give it away.
+- **One-time, hashed tokens:** only a SHA-256 of each link's token is stored. Verification links last 24 hours and
+  reset links 1 hour; each works once; a reset link cannot be used as a verification link or vice versa; and a
+  too-weak new password is rejected *before* the link is consumed.
+- **Revocable sessions:** changing or resetting a password, or "Sign out everywhere", sets
+  `User.sessionsValidAfter`, and every session read compares against it, so stolen cookies stop working at once.
   Deleting an account kills its sessions the same way.
-- **Password policy:** 8+ characters, not a common password, not containing your email, and at most 72
-  bytes (bcrypt silently ignores anything past that, so longer passwords would be quietly truncated).
-- **Verified email required** for the shared AI key and for subscribing (bringing your own key needs
-  nothing). Google/GitHub sign-ups count as verified.
-- **Account page** (`/settings/account`): confirm email, change password, sign out everywhere, and delete
-  the account (which cancels an active Stripe subscription first, and refuses to proceed if it can't).
-- Post-login redirects only ever go to paths on your own site (no open redirect), and the usual
-  security headers are set (`X-Frame-Options`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, HSTS).
+- **Password policy:** 8+ characters, not a common password, not containing your email, and at most 72 bytes
+  (bcrypt silently ignores anything longer).
+- **Verified email is required** for the shared AI key and for subscribing. Bringing your own key needs nothing.
+  Google and GitHub sign-ups count as verified.
+- **Account page** (`/settings/account`): confirm email, change password, sign out everywhere, and delete the
+  account (which cancels an active Stripe subscription first, and stops if it cannot).
+- **Startup checks:** in production the app refuses to sign anyone in if `NEXTAUTH_SECRET` is missing, shorter
+  than 32 characters or still the `.env.example` placeholder, and checks `ENCRYPTION_KEY` the same way when set.
+- **AI provider URLs:** a saved base URL is called by the server, so in production it must be a public `https`
+  address (private, loopback and metadata addresses, credentials, query strings and redirects are refused, and
+  the hostname's DNS is checked). A local Ollama therefore only works in development, or on a self-hosted install
+  with `GENIFY_ALLOW_PRIVATE_AI_HOSTS=true`. See `src/lib/ai/url-safety.ts`.
+- **Client IP:** set `GENIFY_TRUSTED_IP_HEADER` for your host, or per-IP rate limits cannot tell clients apart
+  reliably.
+- Post-login redirects only go to paths on your own site, and standard security headers are set
+  (`X-Frame-Options`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, HSTS, `frame-ancestors 'none'`). A full
+  script-src Content-Security-Policy is deliberately not included, since the app uses inline scripts and a strict
+  policy needs per-request nonces.
 
-Known trade-offs: registration still tells you when an email is already taken (the common, friendlier
-choice; it's rate-limited per address), and per-address limits trust `x-forwarded-for`, which Vercel sets
-itself but a bare self-hosted server does not - the per-account limits protect you either way.
+Known trade-offs: registration still says when an email is already taken (the friendlier choice; it is
+rate-limited per address), and per-address limits trust the configured IP header, so set it correctly for your
+host. The per-account limits protect you either way.
+
+## Access model
+
+- **Public:** home, `/tools` (the list), `/pricing`, `/about`.
+- **Preview only when signed out:** each `/tools/<slug>` page. `ToolShell` renders the tool as an inert, blurred
+  preview with an unlock card and opens the login/sign-up popup (`components/auth-modal.tsx`). Open it from
+  anywhere with `openAuthModal({ mode: "login" | "register" })` from `src/lib/auth-modal.ts`.
+- **Enforced on the server:** every AI route (`/api/ai/*`), `/api/ip-lookup`, history, workflows, account and
+  billing routes return 401 without a session. The dashboard and settings are also redirected by `src/proxy.ts`,
+  but that is only a coarse first gate: every protected page and route checks the session itself.
 
 ## Tests
 
@@ -288,88 +313,111 @@ itself but a bare self-hosted server does not - the per-account limits protect y
 npm test            # run the whole suite once
 npm run test:watch  # re-run on change
 npm run typecheck   # tsc --noEmit
-npm run check       # both of the above
+npm run check       # typecheck + tests
 ```
 
-The suite (Vitest) needs no database, network, or API keys: Prisma is replaced by a small in-memory fake
-(`test/fake-prisma.ts`) and AI providers by local fake servers (`test/helpers/http.ts`) that deliberately
-deliver streams in awkward chunks (cut mid-line, mid-character). It covers the cron engine, card
-generation and Luhn checks, every generator, the SSE parser, both provider adapters, the agent loop and
-all AI features, rate limiting, usage caps, credential resolution (including "can't use someone else's
-key"), the whole account system, and - using the real NextAuth library with real JWT cookies - sign-in,
-session invalidation and the throttled-login error path.
+The suite (Vitest) needs no database, network or API keys. Prisma is replaced by a small in-memory fake
+(`test/fake-prisma.ts`), and AI providers by local fake servers (`test/helpers/http.ts`) that deliberately deliver
+streams in awkward chunks (cut mid-line and mid-character, the way a real TCP stream can). It covers the cron
+engine, card generation and Luhn checks, every generator, the SSE parser, both provider adapters, the agent loop
+and AI features, rate limiting, usage caps, credential resolution (including "cannot use someone else's key"), the
+account system, and sign-in, session invalidation and the throttled-login path using the real NextAuth library
+with real JWT cookies.
 
-Writing it turned up real bugs, all fixed: the OpenAI adapter omitted `type: "function"` on echoed tool
-calls (which the real OpenAI API rejects, breaking every multi-step agent run), the free-tier shared-key
-allowance was being eaten by usage of your *own* key, `/login` couldn't be prerendered (so `next build`
-failed outright), Diners Club cards weren't recognised, the sample-profile generator emitted real email
-domains and phone numbers, JSON "Tab" indentation produced no indentation, and an empty secret couldn't
-be decrypted.
+## Deployment
 
-## Deploying to Vercel
+All hosts need the same environment variables as local, with production values: a production `NEXTAUTH_URL`,
+production OAuth redirect URIs, and `GENIFY_TRUSTED_IP_HEADER` set for your host.
 
-1. Push this repo to GitHub.
-2. In Vercel: **New Project** → import the repo.
-3. Add all the variables from `.env` (with production values — both `DATABASE_URL` and
-   `DIRECT_URL` if you're on Supabase, a new `NEXTAUTH_URL` pointing at your Vercel domain, and
-   production OAuth redirect URIs registered with Google/GitHub if you're using them).
-4. Deploy. Vercel runs `npm run build`, which runs `prisma generate` before `next build`.
-5. After the first deploy, run `npx prisma db push` once (locally, pointed at the production
-   `DATABASE_URL`, or via Vercel's CLI) to create the tables in your production database.
+### Vercel
 
-### Deploying to Netlify
+1. Push the repo to GitHub and **New Project → import** it in Vercel.
+2. Add the variables from `.env` (`DATABASE_URL` and `DIRECT_URL` if you use Supabase).
+3. Deploy. Vercel runs `npm run build`, which runs `prisma generate` before `next build`.
+4. After the first deploy, run `npx prisma db push` once against the production `DATABASE_URL` (locally, or via
+   Vercel's CLI) to create the tables.
 
-Netlify can host this too via its Next.js runtime — same environment variables, same
-`npm run build` command. Neon or Supabase both work well as the database from Netlify.
+### Netlify
+
+Works through Netlify's Next.js runtime with the same variables and `npm run build`. Neon or Supabase both work as
+the database.
+
+### Cloudflare Workers (vinext)
+
+An alternate build path is included: `vite.config.ts` and `cloudflare.config.ts` build the app with
+[vinext](https://www.npmjs.com/package/vinext) for Cloudflare Workers, with a companion response-store worker
+(`genifysuite-response-store`) for caching.
+
+```bash
+npm run dev:vinext             # dev server on :3001
+npm run build:vinext           # production build
+npm run deploy:response-store  # deploy the response-store worker
+npm run deploy:vinext          # deploy the app
+```
+
+Set `GENIFY_TRUSTED_IP_HEADER=cf-connecting-ip` on Cloudflare.
 
 ## Project structure
 
-```
+```text
 src/
   app/
-    (auth)/login, (auth)/register    — sign-in / sign-up pages
-    api/                              — auth, history, and IP-lookup API routes
-    dashboard/                        — saved history (requires sign-in)
-    tools/<slug>/                     — one page per tool
-  components/                         — shared UI (navbar, footer, buttons, tool shell)
-  lib/                                — framework-independent tool logic (easy to unit test)
-prisma/schema.prisma                  — database schema
+    (auth)/login, (auth)/register   sign-in and sign-up pages
+    api/                            auth, account, history, workflows, billing, ai, ip-lookup routes
+    dashboard/                      overview and saved history (requires sign-in)
+    settings/                       ai, account, billing
+    tools/<slug>/                   one page per tool
+    pricing/, about/                public pages
+  components/                       shared UI (navbar, footer, tool shell, command palette, ...)
+  hooks/                            client hooks
+  lib/                              framework-independent logic, easy to unit test
+  lib/ai/                           providers, agent, streaming, features, usage, URL safety
+  proxy.ts                          coarse auth gate for /dashboard and /settings
+prisma/schema.prisma                database schema
+test/                               fake Prisma, HTTP helpers, route and auth tests
+cloudflare.config.ts, vite.config.ts   Cloudflare (vinext) build
 ```
 
-## Adding a new tool
+## Extending it
 
-1. Add the pure logic to `src/lib/<tool>.ts`.
-2. Register it in `src/lib/tools-registry.ts` (name, description, category).
-3. Add a page at `src/app/tools/<slug>/page.tsx` using `<ToolShell>` for consistent chrome,
-   and `<SaveHistoryButton tool="<slug>" .../>` if it should support history.
+**Add a tool**
+
+1. Put the pure logic in `src/lib/<tool>.ts` (with a `.test.ts` next to it).
+2. Register it in `src/lib/tools-registry.ts` (name, description, category, icon).
+3. Add a page at `src/app/tools/<slug>/page.tsx` using `<ToolShell>`, and `<SaveHistoryButton tool="<slug>" .../>`
+   if it should support history.
+
+**Add a single-shot AI feature:** add one entry to `src/lib/ai/features.ts` (a zod input schema, a prompt and a
+parser). It is served by `POST /api/ai/run` with no new route.
+
+**Add an agent tool:** add an entry to `src/lib/ai/tools.ts` with a JSON Schema for its arguments and an
+`execute` function. Both the Anthropic and OpenAI-compatible adapters pick it up automatically.
 
 ## Design system notes
 
-The UI is driven by CSS-variable tokens in `src/app/globals.css` (dark default, light via `data-theme="light"`).
-Token names are historical so existing components keep working: `brass` is the violet primary accent,
-`sage` is success (emerald), `rust` is danger (rose), `ink` = surfaces, `paper` = text.
+The UI is driven by CSS-variable tokens in `src/app/globals.css` (dark by default, light via
+`data-theme="light"`). Token names are historical so existing components keep working: `brass` is the violet
+primary accent, `sage` is success (emerald), `rust` is danger (rose), `ink` is surfaces, `paper` is text.
 
-Reusable pieces (no extra dependencies):
+Reusable pieces, with no extra dependencies:
 
-- `components/aurora-background.tsx` — page-wide animated aurora + grid
-- `components/spotlight-card.tsx` — cursor-following glow card
-- `components/marquee.tsx` — CSS infinite ticker
-- `components/reveal.tsx` — scroll-in animation
-- `components/section-heading.tsx` — `Eyebrow` pill + `PageHeader`
-- `.border-beam`, `.glass`, `.text-gradient(-animated)`, `.spotlight` utilities in `globals.css`
+- `components/aurora-background.tsx`: page-wide animated aurora and grid
+- `components/spotlight-card.tsx`: cursor-following glow card
+- `components/marquee.tsx`: CSS infinite ticker
+- `components/reveal.tsx`: scroll-in animation
+- `components/section-heading.tsx`: `Eyebrow` pill and `PageHeader`
+- `.border-beam`, `.glass`, `.text-gradient(-animated)` and `.spotlight` utilities in `globals.css`
 
-## Access model
+## A note on the card tools
 
-- **Public:** home, `/tools` (browse the list), `/pricing`, `/about`.
-- **Preview only when signed out:** each `/tools/<slug>` page. `ToolShell` renders the tool as an inert, blurred preview with an unlock card, and opens the login/signup popup (`components/auth-modal.tsx`). `app/tools/layout.tsx` passes it the server-verified session.
-- **Enforced on the server:** every AI route (`/api/ai/*`), `/api/ip-lookup`, history, workflows, account and billing routes return 401 without a session. Dashboard and settings are also redirected by `src/proxy.ts`.
-- Open the popup from anywhere with `openAuthModal({ mode: "login" | "register" })` from `src/lib/auth-modal.ts`.
+The original v1 project included a second card-number generator that accepted an arbitrary bank identification
+number (BIN) and produced a full card number with CVV, expiry and a fake balance in a pipe-delimited format, the
+same shape as card-fraud "checker" output rather than a checkout-form testing utility. It was intentionally not
+carried forward. The `card-generator` tool only produces Luhn-valid numbers from the small set of generic prefixes
+that card networks publish for their own test modes (the same category as Stripe's `4242 4242 4242 4242`), with
+no BIN input and no balance field. It is for QA of checkout forms and must never be used with real payment
+systems.
 
-## Security notes
+## License
 
-- **Secrets:** in production the app refuses to sign anyone in if `NEXTAUTH_SECRET` is missing, shorter than 32 characters or still the `.env.example` placeholder (and checks `ENCRYPTION_KEY` the same way when set). Generate both with `openssl rand -base64 32`.
-- **AI provider URLs:** a saved base URL is called by the server, so in production it must be a public `https` address (private/loopback/metadata addresses, credentials, query strings and redirects are refused, and the hostname's DNS is checked). A local Ollama therefore only works in development, or on a self-hosted install with `GENIFY_ALLOW_PRIVATE_AI_HOSTS=true`. See `src/lib/ai/url-safety.ts`.
-- **Client IP:** set `GENIFY_TRUSTED_IP_HEADER` for your host (e.g. `cf-connecting-ip` on Cloudflare), or the per-IP rate limits can't tell clients apart reliably. See `.env.example`.
-- **Daily AI allowance:** a request is taken from the allowance *before* the provider is called, and handed back only when the failure certainly cost nothing (network error, provider 5xx). The agent also caps conversation size (`src/lib/ai/agent-limits.ts`).
-- **Plans:** a paid tier only counts while the Stripe subscription is `active` or `trialing` (`src/lib/billing-status.ts`).
-- **Sign-in throttling:** attempts are counted before the password is checked, so parallel guesses can't outrun the limit; an address that has signed into an account before is exempt from the per-account cap, so strangers can't lock you out of your usual device.
+Released under the [MIT License](LICENSE). Copyright (c) 2026 Archit Aggarwal.
